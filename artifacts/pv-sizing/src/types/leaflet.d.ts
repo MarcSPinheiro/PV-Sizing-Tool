@@ -8,6 +8,10 @@ declare module "leaflet" {
     maxZoom?: number;
   }
 
+  export interface ZoomPanOptions {
+    animate?: boolean;
+  }
+
   export interface MapOptions {
     center?: LatLngExpression;
     zoom?: number;
@@ -55,9 +59,11 @@ declare module "leaflet" {
   export interface CircleOptions extends CircleMarkerOptions {}
 
   export class Map {
-    setView(center: LatLngExpression, zoom?: number): this;
+    setView(center: LatLngExpression, zoom?: number, options?: ZoomPanOptions): this;
     fitBounds(bounds: LatLngBounds, options?: FitBoundsOptions): this;
     invalidateSize(): this;
+    getCenter(): { lat: number; lng: number };
+    getZoom(): number;
     zoomIn(delta?: number): this;
     zoomOut(delta?: number): this;
   }

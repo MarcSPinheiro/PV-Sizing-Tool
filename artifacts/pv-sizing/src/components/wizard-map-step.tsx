@@ -17,6 +17,7 @@ import {
   type MapPanelSpec,
   type MapArea,
   type MapPoint,
+  type MapViewState,
 } from "./satellite-map";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +113,7 @@ export default function WizardMapStep({
   const [tipo, setTipo] = useState<MapArea["tipo"]>("triangulos");
   const [stringMode, setStringMode] = useState<"auto" | "manual">("auto");
   const [showStringLines, setShowStringLines] = useState(true);
+  const [mapView, setMapView] = useState<MapViewState | null>(null);
 
   const storageKey = `pv-map-step-${morada || "default"}`;
   const selectedArea = areas.find((area) => area.id === selectedId) ??null;
@@ -126,12 +128,14 @@ export default function WizardMapStep({
         areas?: MapArea[];
         selectedId?: string | null;
         stringMode?: "auto" | "manual";
+        mapView?: MapViewState | null;
       };
 
       if (Array.isArray(parsed.areas)) {
         setAreas(parsed.areas);
         setSelectedId(parsed.selectedId ??null);
         setStringMode(parsed.stringMode ??"auto");
+        setMapView(parsed.mapView ??null);
       }
     } catch {
       console.warn("Nao foi possivel carregar o mapa guardado.");
@@ -141,9 +145,9 @@ export default function WizardMapStep({
   useEffect(() => {
     localStorage.setItem(
       storageKey,
-      JSON.stringify({ areas, selectedId, stringMode }),
+      JSON.stringify({ areas, selectedId, stringMode, mapView }),
     );
-  }, [areas, selectedId, stringMode, storageKey]);
+  }, [areas, selectedId, stringMode, mapView, storageKey]);
 
   const areaStats = useMemo(
     () =>
@@ -515,8 +519,10 @@ export default function WizardMapStep({
             address={morada}
             panelSpec={panelSpec}
             showStringLines={showStringLines}
+            savedView={mapView}
             onAddPoint={(point) => setDraftPoints((prev) => [...prev, point])}
             onSelectArea={setSelectedId}
+            onViewChange={setMapView}
           />
 
           <div className="pointer-events-none absolute bottom-5 left-5 z-[1000] flex items-end gap-6 text-white">

@@ -51,6 +51,11 @@ const PORTUGAL_BOUNDS: LatLngExpression[] = [
   [42.3, -6.0],
 ];
 
+export type MapViewState = {
+  center: MapPoint;
+  zoom: number;
+};
+
 const validPoint = (point: MapPoint) =>
   typeof point?.lat === "number" &&
   typeof point?.lng === "number" &&
@@ -301,6 +306,48 @@ function AreaAutoCenter({ areas }: { areas: MapArea[] }) {
   return null;
 }
 
+function MapViewMemory({
+  view,
+  onViewChange,
+}: {
+  view?: MapViewState | null;
+  onViewChange?: (view: MapViewState) => void;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!view) return;
+
+    const timeout = window.setTimeout(() => {
+      map.setView([view.center.lat, view.center.lng], view.zoom, {
+        animate: false,
+      });
+      map.invalidateSize();
+    }, 150);
+
+    return () => window.clearTimeout(timeout);
+  }, [map, view]);
+
+  useMapEvents({
+    moveend() {
+      const center = map.getCenter();
+      onViewChange?.({
+        center: { lat: center.lat, lng: center.lng },
+        zoom: map.getZoom(),
+      });
+    },
+    zoomend() {
+      const center = map.getCenter();
+      onViewChange?.({
+        center: { lat: center.lat, lng: center.lng },
+        zoom: map.getZoom(),
+      });
+    },
+  });
+
+  return null;
+}
+
 function DrawEvents({
   drawing,
   onAddPoint,
@@ -362,8 +409,10 @@ export function SatelliteMap({
   address,
   panelSpec,
   showStringLines = true,
+  savedView,
   onAddPoint,
   onSelectArea,
+  onViewChange,
 }: {
   areas: MapArea[];
   selectedId: string | null;
@@ -372,8 +421,10 @@ export function SatelliteMap({
   address?: string;
   panelSpec: MapPanelSpec;
   showStringLines?: boolean;
+  savedView?: MapViewState | null;
   onAddPoint: (point: MapPoint) => void;
   onSelectArea: (id: string) => void;
+  onViewChange?: (view: MapViewState) => void;
 }) {
   useEffect(() => {
     document.body.classList.toggle("map-drawing-active", drawing);
@@ -415,7 +466,8 @@ export function SatelliteMap({
       />
 
       <SearchBox />
-      {validAreas.length > 0 ?(
+      <MapViewMemory view={savedView} onViewChange={onViewChange} />
+      {savedView ?null : validAreas.length > 0 ?(
         <AreaAutoCenter areas={validAreas} />
       ) : (
         <AddressAutoCenter address={address} />
