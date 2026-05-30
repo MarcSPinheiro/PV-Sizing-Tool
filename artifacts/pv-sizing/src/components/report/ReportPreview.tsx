@@ -1245,7 +1245,9 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
                     ["Morada", text(map?.morada) ?? text(cliente.morada) ?? "-"],
                     ["Áreas desenhadas", int(map?.totals?.areas)],
                     ["Área disponível", fmt(map?.totals?.areaM2, 2, "m²")],
+                    ["Painéis pretendidos", int(map?.totals?.paineisSolicitados ??map?.totals?.paineis)],
                     ["Painéis colocados", int(map?.totals?.paineis)],
+                    ["Fora da área", int(map?.totals?.paineisForaArea ??0)],
                     ["Strings", int(map?.totals?.strings)],
                     ["Potência no mapa", fmt(map?.totals?.potenciaKwp, 2, "kWp")],
                     ["Ocupação", fmt(map?.totals?.ocupacao, 0, "%")],
@@ -1261,7 +1263,9 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
                     <tr>
                       <th className="px-3 py-2 text-left">Área</th>
                       <th className="px-3 py-2 text-right">m²</th>
-                      <th className="px-3 py-2 text-right">Painéis</th>
+                      <th className="px-3 py-2 text-right">Pretendidos</th>
+                      <th className="px-3 py-2 text-right">Colocados</th>
+                      <th className="px-3 py-2 text-right">Fora</th>
                       <th className="px-3 py-2 text-right">Rotação</th>
                       <th className="px-3 py-2 text-left">Strings</th>
                     </tr>
@@ -1272,6 +1276,8 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
                         <td className="px-3 py-2 font-semibold">{area.nome}</td>
                         <td className="px-3 py-2 text-right">{fmt(area.areaM2, 2)}</td>
                         <td className="px-3 py-2 text-right">{area.paineis}</td>
+                        <td className="px-3 py-2 text-right">{area.paineisColocados ??area.paineis}</td>
+                        <td className="px-3 py-2 text-right">{area.paineisForaArea ??0}</td>
                         <td className="px-3 py-2 text-right">{fmt(area.rotacao, 0, "º")}</td>
                         <td className="px-3 py-2">{area.strings.map((item) => `${item.nome}: ${item.paineis}`).join("; ")}</td>
                       </tr>

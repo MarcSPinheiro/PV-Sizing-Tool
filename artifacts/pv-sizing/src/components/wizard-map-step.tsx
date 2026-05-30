@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import {
   SatelliteMap,
+  createPanelLayout,
   polygonAreaM2,
   type MapPanelSpec,
   type MapArea,
@@ -38,6 +39,8 @@ export type MapReportData = {
     rotacao: number;
     panelOffsetLat?: number;
     panelOffsetLng?: number;
+    paineisColocados: number;
+    paineisForaArea: number;
     areaM2: number;
     points: MapPoint[];
   }>;
@@ -45,6 +48,8 @@ export type MapReportData = {
     areas: number;
     areaM2: number;
     paineis: number;
+    paineisSolicitados: number;
+    paineisForaArea: number;
     strings: number;
     potenciaKwp: number;
     ocupacao: number;
@@ -158,26 +163,43 @@ export default function WizardMapStep({
     [areas],
   );
 
+  const areaPanelStats = useMemo(
+    () =>
+      areas.map((area) => {
+        const placed = createPanelLayout(area, panelSpec).length;
+        return {
+          id: area.id,
+          placed,
+          outside: Math.max(0, area.paineis - placed),
+        };
+      }),
+    [areas, panelSpec],
+  );
+
   const totals = useMemo(() => {
-    const paineis = areas.reduce((sum, area) => sum + area.paineis, 0);
+    const requestedPanels = areas.reduce((sum, area) => sum + area.paineis, 0);
+    const placedPanels = areaPanelStats.reduce((sum, item) => sum + item.placed, 0);
+    const outsidePanels = Math.max(0, requestedPanels - placedPanels);
     const totalArea = areaStats.reduce((sum, item) => sum + item.areaM2, 0);
 
     return {
       areas: areas.length,
       areaM2: totalArea,
-      paineis,
+      paineis: placedPanels,
+      paineisSolicitados: requestedPanels,
+      paineisForaArea: outsidePanels,
       strings: areas.reduce((sum, area) => sum + area.strings.length, 0),
-      potenciaKwp: (paineis * panelSpec.potenciaWp) / 1000,
+      potenciaKwp: (placedPanels * panelSpec.potenciaWp) / 1000,
       ocupacao:
         totalArea > 0
           ?Math.min(
               100,
-              (paineis * panelSpec.larguraM * panelSpec.alturaM * 100) /
+              (placedPanels * panelSpec.larguraM * panelSpec.alturaM * 100) /
                 totalArea,
             )
           : 0,
     };
-  }, [areas, areaStats, panelSpec]);
+  }, [areas, areaStats, areaPanelStats, panelSpec]);
 
   const reportData = useMemo<MapReportData>(
     () => ({
@@ -194,12 +216,14 @@ export default function WizardMapStep({
         rotacao: area.rotacao,
         panelOffsetLat: area.panelOffsetLat,
         panelOffsetLng: area.panelOffsetLng,
+        paineisColocados: areaPanelStats.find((item) => item.id === area.id)?.placed ??0,
+        paineisForaArea: areaPanelStats.find((item) => item.id === area.id)?.outside ??0,
         areaM2: areaStats.find((item) => item.id === area.id)?.areaM2 ??0,
         points: area.points,
       })),
       totals,
     }),
-    [areas, morada, panelSpec, totals, displayedTilt, areaStats],
+    [areas, morada, panelSpec, totals, displayedTilt, areaStats, areaPanelStats],
   );
 
   useEffect(() => {
@@ -287,6 +311,8 @@ export default function WizardMapStep({
 
   const areaMetric = (areaId: string) =>
     areaStats.find((item) => item.id === areaId)?.areaM2 ??0;
+  const panelMetric = (areaId: string) =>
+    areaPanelStats.find((item) => item.id === areaId) ??{ placed: 0, outside: 0 };
 
   return (
     <div className="-mx-2 -mt-4 space-y-4">
@@ -398,8 +424,15 @@ export default function WizardMapStep({
                   </div>
                   <div className="mt-1 flex justify-between text-xs text-slate-600">
                     <span>{orientationLabel(area.rotacao)}</span>
-                    <span>{area.paineis} paineis</span>
+                    <span>
+                      {panelMetric(area.id).placed}/{area.paineis} paineis
+                    </span>
                   </div>
+                  {panelMetric(area.id).outside > 0 && (
+                    <div className="mt-2 rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                      {panelMetric(area.id).outside} fora da area
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -495,16 +528,18 @@ export default function WizardMapStep({
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Total de paineis disponiveis</span>
-                <strong>{totals.paineis}</strong>
+                <span>Total de paineis pretendidos</span>
+                <strong>{totals.paineisSolicitados}</strong>
               </div>
               <div className="flex justify-between">
                 <span>Paineis colocados</span>
                 <strong>{totals.paineis}</strong>
               </div>
               <div className="flex justify-between">
-                <span>Paineis por colocar</span>
-                <strong>0</strong>
+                <span>Fora da area</span>
+                <strong className={totals.paineisForaArea > 0 ?"text-amber-600" : ""}>
+                  {totals.paineisForaArea}
+                </strong>
               </div>
             </div>
           </div>
@@ -665,6 +700,12 @@ export default function WizardMapStep({
                 <strong>{totals.paineis}</strong>
               </div>
               <div className="flex justify-between">
+                <span className="text-slate-600">Fora da area</span>
+                <strong className={totals.paineisForaArea > 0 ?"text-amber-600" : ""}>
+                  {totals.paineisForaArea}
+                </strong>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-slate-600">Potencia instalada</span>
                 <strong>{formatPower(totals.potenciaKwp)}</strong>
               </div>
@@ -765,6 +806,14 @@ export default function WizardMapStep({
                     }}
                   />
                 </label>
+
+                {panelMetric(selectedArea.id).outside > 0 && (
+                  <p className="rounded-md bg-amber-50 p-2 text-xs font-semibold text-amber-800">
+                    {panelMetric(selectedArea.id).placed} colocados dentro da area;
+                    {" "}
+                    {panelMetric(selectedArea.id).outside} ficaram fora por falta de espaco.
+                  </p>
+                )}
 
                 {stringMode === "auto" && (
                   <p className="rounded-md bg-blue-50 p-2 text-xs text-blue-900">
