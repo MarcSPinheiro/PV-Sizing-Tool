@@ -166,11 +166,20 @@ export default function WizardMapStep({
   const areaPanelStats = useMemo(
     () =>
       areas.map((area) => {
-        const placed = createPanelLayout(area, panelSpec).length;
+        const panels = createPanelLayout(area, panelSpec);
+        const placed = panels.length;
         return {
           id: area.id,
           placed,
           outside: Math.max(0, area.paineis - placed),
+          strings: area.strings.map((string, index) => {
+            const stringPlaced = panels.filter((panel) => panel.stringIndex === index).length;
+            return {
+              requested: string.paineis,
+              placed: stringPlaced,
+              outside: Math.max(0, string.paineis - stringPlaced),
+            };
+          }),
         };
       }),
     [areas, panelSpec],
@@ -312,7 +321,9 @@ export default function WizardMapStep({
   const areaMetric = (areaId: string) =>
     areaStats.find((item) => item.id === areaId)?.areaM2 ??0;
   const panelMetric = (areaId: string) =>
-    areaPanelStats.find((item) => item.id === areaId) ??{ placed: 0, outside: 0 };
+    areaPanelStats.find((item) => item.id === areaId) ??{ placed: 0, outside: 0, strings: [] };
+  const stringMetric = (areaId: string, index: number) =>
+    panelMetric(areaId).strings[index] ??{ requested: 0, placed: 0, outside: 0 };
 
   return (
     <div className="-mx-2 -mt-4 space-y-4">
@@ -740,33 +751,43 @@ export default function WizardMapStep({
                 </p>
               ) : (
                 areas.flatMap((area) =>
-                  area.strings.map((string, index) => (
-                    <div key={`${area.id}-${index}`} className="rounded-md border p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <strong className="flex items-center gap-2 text-sm">
-                          <span
-                            className="h-2.5 w-2.5 rounded-full"
-                            style={{ backgroundColor: area.cor }}
-                          />
-                          {string.nome}
-                        </strong>
-                        <span className="flex items-center gap-2 text-slate-500">
-                          <Eye className="h-3.5 w-3.5" />
-                        </span>
+                  area.strings.map((string, index) => {
+                    const metric = stringMetric(area.id, index);
+                    return (
+                      <div key={`${area.id}-${index}`} className="rounded-md border p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="flex items-center gap-2 text-sm">
+                            <span
+                              className="h-2.5 w-2.5 rounded-full"
+                              style={{ backgroundColor: area.cor }}
+                            />
+                            {area.nome} - {string.nome}
+                          </strong>
+                          <span className="flex items-center gap-2 text-slate-500">
+                            <Eye className="h-3.5 w-3.5" />
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-600">
+                          {orientationLabel(area.rotacao)}
+                        </p>
+                        <div className="mt-2 flex justify-between text-xs">
+                          <span>
+                            {metric.placed}/{metric.requested} paineis
+                          </span>
+                          <span>
+                            {formatPower(
+                              (metric.placed * panelSpec.potenciaWp) / 1000,
+                            )}
+                          </span>
+                        </div>
+                        {metric.outside > 0 && (
+                          <p className="mt-2 rounded bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
+                            {metric.outside} por colocar fora da area
+                          </p>
+                        )}
                       </div>
-                      <p className="mt-1 text-xs text-slate-600">
-                        {orientationLabel(area.rotacao)}
-                      </p>
-                      <div className="mt-2 flex justify-between text-xs">
-                        <span>{string.paineis} paineis</span>
-                        <span>
-                          {formatPower(
-                            (string.paineis * panelSpec.potenciaWp) / 1000,
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  )),
+                    );
+                  }),
                 )
               )}
             </div>
