@@ -3,6 +3,7 @@ declare module "leaflet" {
   export type LatLngBoundsExpression = LatLngExpression[];
 
   export interface FitBoundsOptions {
+    animate?: boolean;
     padding?: [number, number];
     maxZoom?: number;
   }
@@ -55,8 +56,14 @@ declare module "leaflet" {
 
   export class Map {
     setView(center: LatLngExpression, zoom?: number): this;
+    fitBounds(bounds: LatLngBounds, options?: FitBoundsOptions): this;
+    invalidateSize(): this;
     zoomIn(delta?: number): this;
     zoomOut(delta?: number): this;
+  }
+
+  export class LatLngBounds {
+    constructor(latlngs: Array<[number, number]>);
   }
 
   export class GridLayer {}

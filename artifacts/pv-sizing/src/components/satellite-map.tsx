@@ -8,7 +8,7 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-import type { LeafletMouseEvent, LatLngExpression } from "leaflet";
+import { LatLngBounds, type LeafletMouseEvent, type LatLngExpression } from "leaflet";
 import { Layers, LocateFixed, Minus, Plus } from "lucide-react";
 
 export type MapPoint = { lat: number; lng: number };
@@ -272,6 +272,35 @@ function AddressAutoCenter({ address }: { address?: string }) {
   return null;
 }
 
+function AreaAutoCenter({ areas }: { areas: MapArea[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const points = areas
+      .flatMap((area) => area.points)
+      .filter(validPoint);
+
+    if (!points.length) return;
+
+    const bounds = new LatLngBounds(
+      points.map((point) => [point.lat, point.lng] as [number, number]),
+    );
+
+    const timeout = window.setTimeout(() => {
+      map.fitBounds(bounds, {
+        animate: false,
+        maxZoom: 22,
+        padding: [80, 80],
+      });
+      map.invalidateSize();
+    }, 150);
+
+    return () => window.clearTimeout(timeout);
+  }, [areas, map]);
+
+  return null;
+}
+
 function DrawEvents({
   drawing,
   onAddPoint,
@@ -386,7 +415,11 @@ export function SatelliteMap({
       />
 
       <SearchBox />
-      <AddressAutoCenter address={address} />
+      {validAreas.length > 0 ?(
+        <AreaAutoCenter areas={validAreas} />
+      ) : (
+        <AddressAutoCenter address={address} />
+      )}
       <MapTools />
       <DrawEvents drawing={drawing} onAddPoint={onAddPoint} />
 

@@ -377,9 +377,6 @@ function renderMapSvg(map: MapReportData | null | undefined) {
                 />
               );
             })}
-            <rect x={cp.x - 52} y={cp.y - 42} width="104" height="34" rx="5" fill="rgba(15,23,42,.86)" />
-            <text x={cp.x - 44} y={cp.y - 22} fill="white" fontSize="13" fontWeight="700">{area.nome}</text>
-            <text x={cp.x - 44} y={cp.y - 10} fill="#cbd5e1" fontSize="10">{area.paineis} painéis</text>
           </g>
         );
       })}
@@ -452,8 +449,6 @@ function renderMapOverlaySvg(
           return `${p.x},${p.y}`;
         }).join(" ");
         const panels = createPanelLayout(reportAreaToMapArea(area), map.panelSpec);
-        const labelPoint = panels[0]?.center ??area.points[0];
-        const label = project(labelPoint.lat, labelPoint.lng);
 
         return (
           <g key={area.id}>
@@ -479,9 +474,6 @@ function renderMapOverlaySvg(
                 />
               );
             })}
-            <rect x={label.x - 44} y={label.y - 34} width="88" height="28" rx="5" fill="rgba(15,23,42,.88)" />
-            <text x={label.x - 35} y={label.y - 17} fill="white" fontSize="12" fontWeight="700">{area.nome}</text>
-            <text x={label.x - 35} y={label.y - 6} fill="#cbd5e1" fontSize="9">{area.paineis} painéis</text>
           </g>
         );
       })}
@@ -602,8 +594,6 @@ function renderSatelliteMapSvg(map: MapReportData | null | undefined) {
               return `${p.x},${p.y}`;
             }).join(" ");
             const panels = createPanelLayout(reportAreaToMapArea(area), mapData.panelSpec);
-            const labelPoint = panels[0]?.center ??area.points[0];
-            const label = toMapPoint(labelPoint.lat, labelPoint.lng);
 
             return (
               <g key={area.id}>
@@ -617,9 +607,6 @@ function renderSatelliteMapSvg(map: MapReportData | null | undefined) {
                     <polygon key={panel.id} points={panelPolygon} fill="#19375f" stroke="#a7d7ff" strokeWidth="1" />
                   );
                 })}
-                <rect x={label.x - 44} y={label.y - 34} width="88" height="28" rx="5" fill="rgba(15,23,42,.88)" />
-                <text x={label.x - 35} y={label.y - 17} fill="white" fontSize="12" fontWeight="700">{area.nome}</text>
-                <text x={label.x - 35} y={label.y - 6} fill="#cbd5e1" fontSize="9">{area.paineis} painéis</text>
               </g>
             );
           })}
