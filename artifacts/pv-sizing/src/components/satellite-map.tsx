@@ -146,8 +146,8 @@ export function createPanelLayout(
   };
   const metersPerDegreeLng =
     METERS_PER_DEGREE_LAT * Math.cos((polygonCenter.lat * Math.PI) / 180);
-  const panelLng = panelSpec.larguraM / metersPerDegreeLng;
-  const panelLat = panelSpec.alturaM / METERS_PER_DEGREE_LAT;
+  const panelLng = panelSpec.alturaM / metersPerDegreeLng;
+  const panelLat = panelSpec.larguraM / METERS_PER_DEGREE_LAT;
   const cellLng = panelLng * 1.12;
   const cellLat =
     area.tipo === "coplanar"
