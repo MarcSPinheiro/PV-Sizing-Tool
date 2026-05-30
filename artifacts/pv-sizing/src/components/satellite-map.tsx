@@ -98,12 +98,16 @@ function rotatePoint(point: MapPoint, center: MapPoint, degrees: number) {
   const radians = (degrees * Math.PI) / 180;
   const cos = Math.cos(radians);
   const sin = Math.sin(radians);
-  const dx = point.lng - center.lng;
-  const dy = point.lat - center.lat;
+  const metersPerDegreeLng =
+    METERS_PER_DEGREE_LAT * Math.cos((center.lat * Math.PI) / 180);
+  const dx = (point.lng - center.lng) * metersPerDegreeLng;
+  const dy = (point.lat - center.lat) * METERS_PER_DEGREE_LAT;
+  const rotatedX = dx * cos - dy * sin;
+  const rotatedY = dx * sin + dy * cos;
 
   return {
-    lat: center.lat + dx * sin + dy * cos,
-    lng: center.lng + dx * cos - dy * sin,
+    lat: center.lat + rotatedY / METERS_PER_DEGREE_LAT,
+    lng: center.lng + rotatedX / metersPerDegreeLng,
   };
 }
 
