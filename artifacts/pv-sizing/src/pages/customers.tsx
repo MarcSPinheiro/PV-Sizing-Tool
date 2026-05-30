@@ -46,13 +46,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Search, ExternalLink } from "lucide-react";
+import { LocateFixed, Plus, Pencil, Trash2, Search, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
 const customerSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
   morada: z.string().min(1, "Morada é obrigatória"),
+  codigoPostal: z.string().optional(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   tipoCliente: z.enum(["Residencial", "Comercial", "Industrial"]),
@@ -69,6 +70,7 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
   const { data: customers, isLoading } = useListCustomers();
   const createCustomer = useCreateCustomer();
@@ -82,6 +84,7 @@ export default function Customers() {
     defaultValues: {
       nome: "",
       morada: "",
+      codigoPostal: "",
       latitude: 38.7223, // Lisbon default
       longitude: -9.1393,
       tipoCliente: "Residencial",
@@ -93,10 +96,70 @@ export default function Customers() {
     },
   });
 
+  const toCustomerPayload = (data: CustomerFormValues) => {
+    const { codigoPostal, ...payload } = data;
+    const trimmedPostal = codigoPostal?.trim();
+    return {
+      ...payload,
+      morada:
+        trimmedPostal && !payload.morada.toLowerCase().includes(trimmedPostal.toLowerCase())
+          ? `${payload.morada}, ${trimmedPostal}`
+          : payload.morada,
+    };
+  };
+
+  const extractPostalCode = (morada: string) => morada.match(/\b\d{4}-\d{3}\b/)?.[0] ?? "";
+
+  const updateCoordinatesFromAddress = async () => {
+    const morada = form.getValues("morada")?.trim();
+    const codigoPostal = form.getValues("codigoPostal")?.trim();
+
+    if (!morada && !codigoPostal) {
+      toast({
+        title: "Indique a morada ou o código postal",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocating(true);
+    try {
+      const query = [morada, codigoPostal, "Portugal"].filter(Boolean).join(", ");
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pt&q=${encodeURIComponent(query)}`,
+      );
+      const results: Array<{ lat: string; lon: string; display_name?: string }> = await response.json();
+
+      if (!response.ok || results.length === 0) {
+        throw new Error("Location not found");
+      }
+
+      const latitude = Number.parseFloat(results[0].lat);
+      const longitude = Number.parseFloat(results[0].lon);
+
+      form.setValue("latitude", Number(latitude.toFixed(6)), { shouldDirty: true, shouldValidate: true });
+      form.setValue("longitude", Number(longitude.toFixed(6)), { shouldDirty: true, shouldValidate: true });
+
+      toast({
+        title: "Coordenadas atualizadas",
+        description: results[0].display_name,
+      });
+    } catch {
+      toast({
+        title: "Não foi possível encontrar essa localização",
+        description: "Confirme a morada e o código postal.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
   const onSubmit = (data: CustomerFormValues) => {
+    const payload = toCustomerPayload(data);
     if (editingCustomer) {
       updateCustomer.mutate(
-        { id: editingCustomer.id, data },
+        { id: editingCustomer.id, data: payload },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: getListCustomersQueryKey() });
@@ -108,7 +171,7 @@ export default function Customers() {
       );
     } else {
       createCustomer.mutate(
-        { data },
+        { data: payload },
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: getListCustomersQueryKey() });
@@ -140,6 +203,7 @@ export default function Customers() {
     form.reset({
       nome: customer.nome,
       morada: customer.morada,
+      codigoPostal: extractPostalCode(customer.morada),
       latitude: customer.latitude,
       longitude: customer.longitude,
       tipoCliente: customer.tipoCliente as "Residencial" | "Comercial" | "Industrial",
@@ -187,6 +251,19 @@ export default function Customers() {
                   <FormField control={form.control} name="morada" render={({ field }) => (
                     <FormItem className="col-span-2"><FormLabel>Morada Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
+                  <FormField control={form.control} name="codigoPostal" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código postal</FormLabel>
+                      <FormControl><Input placeholder="0000-000" {...field} value={field.value ?? ""} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <div className="flex items-end">
+                    <Button type="button" variant="outline" className="w-full" onClick={updateCoordinatesFromAddress} disabled={isLocating}>
+                      <LocateFixed className="mr-2 h-4 w-4" />
+                      {isLocating ? "A localizar..." : "Atualizar coordenadas"}
+                    </Button>
+                  </div>
                   <FormField control={form.control} name="latitude" render={({ field }) => (
                     <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="0.000001" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
@@ -332,6 +409,19 @@ export default function Customers() {
                                 <FormField control={form.control} name="morada" render={({ field }) => (
                                   <FormItem className="col-span-2"><FormLabel>Morada Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
+                                <FormField control={form.control} name="codigoPostal" render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Código postal</FormLabel>
+                                    <FormControl><Input placeholder="0000-000" {...field} value={field.value ?? ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <div className="flex items-end">
+                                  <Button type="button" variant="outline" className="w-full" onClick={updateCoordinatesFromAddress} disabled={isLocating}>
+                                    <LocateFixed className="mr-2 h-4 w-4" />
+                                    {isLocating ? "A localizar..." : "Atualizar coordenadas"}
+                                  </Button>
+                                </div>
                                 <FormField control={form.control} name="latitude" render={({ field }) => (
                                   <FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="0.000001" {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
