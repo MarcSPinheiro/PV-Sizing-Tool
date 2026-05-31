@@ -18,6 +18,7 @@ export type MapArea = {
   nome: string;
   cor: string;
   tipo: "triangulos" | "coplanar";
+  panelOrientation?: "horizontal" | "vertical";
   paineis: number;
   strings: { nome: string; paineis: number }[];
   rotacao: number;
@@ -151,8 +152,9 @@ export function createPanelLayout(
   };
   const metersPerDegreeLng =
     METERS_PER_DEGREE_LAT * Math.cos((polygonCenter.lat * Math.PI) / 180);
-  const panelLng = panelSpec.alturaM / metersPerDegreeLng;
-  const panelLat = panelSpec.larguraM / METERS_PER_DEGREE_LAT;
+  const isVertical = area.panelOrientation === "vertical";
+  const panelLng = (isVertical ?panelSpec.larguraM : panelSpec.alturaM) / metersPerDegreeLng;
+  const panelLat = (isVertical ?panelSpec.alturaM : panelSpec.larguraM) / METERS_PER_DEGREE_LAT;
   const cellLng = panelLng * 1.12;
   const cellLat =
     area.tipo === "coplanar"

@@ -411,6 +411,7 @@ function reportAreaToMapArea(area: MapReportData["areas"][number]): MapArea {
     nome: area.nome,
     cor: area.cor,
     tipo: area.tipo,
+    panelOrientation: area.panelOrientation,
     paineis: area.paineis,
     strings: area.strings,
     rotacao: area.rotacao,

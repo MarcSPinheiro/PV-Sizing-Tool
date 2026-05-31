@@ -34,6 +34,7 @@ export type MapReportData = {
     nome: string;
     cor: string;
     tipo: MapArea["tipo"];
+    panelOrientation?: MapArea["panelOrientation"];
     paineis: number;
     strings: MapArea["strings"];
     rotacao: number;
@@ -116,6 +117,7 @@ export default function WizardMapStep({
   const [drawing, setDrawing] = useState(false);
   const [draftPoints, setDraftPoints] = useState<MapPoint[]>([]);
   const [tipo, setTipo] = useState<MapArea["tipo"]>("triangulos");
+  const [panelOrientation, setPanelOrientation] = useState<NonNullable<MapArea["panelOrientation"]>>("horizontal");
   const [stringMode, setStringMode] = useState<"auto" | "manual">("auto");
   const [showStringLines, setShowStringLines] = useState(true);
   const [mapView, setMapView] = useState<MapViewState | null>(null);
@@ -133,6 +135,7 @@ export default function WizardMapStep({
         areas?: MapArea[];
         selectedId?: string | null;
         stringMode?: "auto" | "manual";
+        panelOrientation?: NonNullable<MapArea["panelOrientation"]>;
         mapView?: MapViewState | null;
       };
 
@@ -140,6 +143,7 @@ export default function WizardMapStep({
         setAreas(parsed.areas);
         setSelectedId(parsed.selectedId ??null);
         setStringMode(parsed.stringMode ??"auto");
+        setPanelOrientation(parsed.panelOrientation ??"horizontal");
         setMapView(parsed.mapView ??null);
       }
     } catch {
@@ -150,9 +154,15 @@ export default function WizardMapStep({
   useEffect(() => {
     localStorage.setItem(
       storageKey,
-      JSON.stringify({ areas, selectedId, stringMode, mapView }),
+      JSON.stringify({ areas, selectedId, stringMode, panelOrientation, mapView }),
     );
-  }, [areas, selectedId, stringMode, mapView, storageKey]);
+  }, [areas, selectedId, stringMode, panelOrientation, mapView, storageKey]);
+
+  useEffect(() => {
+    if (!selectedArea) return;
+    setTipo(selectedArea.tipo);
+    setPanelOrientation(selectedArea.panelOrientation ??"horizontal");
+  }, [selectedArea?.id]);
 
   const areaStats = useMemo(
     () =>
@@ -220,6 +230,7 @@ export default function WizardMapStep({
         nome: area.nome,
         cor: area.cor,
         tipo: area.tipo,
+        panelOrientation: area.panelOrientation,
         paineis: area.paineis,
         strings: area.strings,
         rotacao: area.rotacao,
@@ -260,6 +271,7 @@ export default function WizardMapStep({
       nome: `Area ${n}`,
       cor: AREA_COLORS[(n - 1) % AREA_COLORS.length],
       tipo,
+      panelOrientation,
       paineis: panelCount,
       strings: distributeStrings(panelCount),
       rotacao: n === 1 ?0 : n === 2 ?90 : -90,
@@ -375,6 +387,28 @@ export default function WizardMapStep({
                 }}
               >
                 Coplanar
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Button
+                type="button"
+                variant={panelOrientation === "horizontal" ?"default" : "outline"}
+                onClick={() => {
+                  setPanelOrientation("horizontal");
+                  if (selectedArea) updateSelected({ panelOrientation: "horizontal" });
+                }}
+              >
+                Horizontal
+              </Button>
+              <Button
+                type="button"
+                variant={panelOrientation === "vertical" ?"default" : "outline"}
+                onClick={() => {
+                  setPanelOrientation("vertical");
+                  if (selectedArea) updateSelected({ panelOrientation: "vertical" });
+                }}
+              >
+                Vertical
               </Button>
             </div>
           </div>
