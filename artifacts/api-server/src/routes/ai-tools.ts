@@ -284,6 +284,20 @@ function cleanAiJson(text: string) {
   return text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 }
 
+function parseAiJsonObject(text: string) {
+  const clean = cleanAiJson(text);
+  try {
+    return JSON.parse(clean);
+  } catch {
+    const start = clean.indexOf("{");
+    const end = clean.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(clean.slice(start, end + 1));
+    }
+    throw new Error("A IA devolveu uma resposta sem JSON valido.");
+  }
+}
+
 const InvoiceTextBodySchema = z.object({
   texto: z.string().min(20, "Cole texto da fatura com pelo menos 20 caracteres"),
 });
@@ -474,7 +488,7 @@ router.post(
 
       const message = await getAnthropicClient(req).messages.create({
         model: AI_MODEL,
-        max_tokens: 1024,
+        max_tokens: 4096,
         messages: [
           {
             role: "user",
@@ -541,11 +555,7 @@ Devolve APENAS este JSON (sem texto adicional, sem markdown):
 
       const text =
         message.content[0].type === "text" ? message.content[0].text : "{}";
-      const clean = text
-        .replace(/```json\n?/g, "")
-        .replace(/```\n?/g, "")
-        .trim();
-      const data = JSON.parse(clean);
+      const data = parseAiJsonObject(text);
       res.json(data);
     } catch (err) {
       req.log?.error({ err }, "parse-invoice AI error");
@@ -607,7 +617,7 @@ ${parsed.data.texto}`,
       });
 
       const text = message.content[0].type === "text" ? message.content[0].text : "{}";
-      res.json(JSON.parse(cleanAiJson(text)));
+      res.json(parseAiJsonObject(text));
     } catch (err) {
       req.log?.error({ err }, "parse-invoice-text AI error");
       handleAiError(res, err, "Erro ao processar texto da fatura com IA");

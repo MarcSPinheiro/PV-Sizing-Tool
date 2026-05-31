@@ -56,6 +56,7 @@ interface ParsedInvoice {
   data?: InvoiceData;
   edits?: Partial<InvoiceData>;
   showEdit?: boolean;
+  error?: string;
 }
 
 export interface ConsumoData {
@@ -110,6 +111,22 @@ function parseMesIndex(mes: string): number {
 }
 
 // ─── Consolidation ────────────────────────────────────────────────────────────
+async function readApiError(resp: Response): Promise<string> {
+  try {
+    const json = await resp.json() as { error?: unknown; message?: unknown };
+    const msg = json.error ?? json.message;
+    if (msg) return String(msg);
+  } catch {
+    try {
+      const text = await resp.text();
+      if (text.trim()) return text.trim();
+    } catch {
+      // ignore
+    }
+  }
+  return `HTTP ${resp.status}`;
+}
+
 type FonteEstimativa = "grafico_12m" | "grafico_parcial" | "faturas_multiplas" | "fatura_unica" | "extrapolacao";
 
 interface ConsolidatedData {
@@ -340,15 +357,20 @@ export default function WizardStep1({ data, onChange }: Props) {
     const id = Math.random().toString(36).slice(2);
     setInvoices(prev => [...prev, { id, fileName: file.name, status: "parsing" }]);
     try {
+      const aiHeaders = getAiHeaders();
+      if (!("x-anthropic-api-key" in aiHeaders)) {
+        throw new Error("Adicione a chave de IA nas Definições da Empresa antes de carregar faturas.");
+      }
       const fd = new FormData();
       fd.append("file", file);
-      const resp = await fetch(`${BASE}/api/tools/parse-invoice`, { method: "POST", headers: getAiHeaders(), body: fd });
-      if (!resp.ok) throw new Error();
+      const resp = await fetch(`${BASE}/api/tools/parse-invoice`, { method: "POST", headers: aiHeaders, body: fd });
+      if (!resp.ok) throw new Error(await readApiError(resp));
       const invData: InvoiceData = await resp.json();
       setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "done", data: invData } : i));
-    } catch {
-      setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "error" } : i));
-      toast({ title: `Erro ao processar ${file.name}`, variant: "destructive" });
+    } catch (err) {
+      const message = err instanceof Error ?err.message : "Erro ao processar fatura";
+      setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "error", error: message } : i));
+      toast({ title: `Erro ao processar ${file.name}`, description: message, variant: "destructive" });
     }
   }, [toast]);
 
@@ -375,13 +397,14 @@ export default function WizardStep1({ data, onChange }: Props) {
         headers: { "Content-Type": "application/json", ...getAiHeaders() },
         body: JSON.stringify({ texto: invoiceText }),
       });
-      if (!resp.ok) throw new Error();
+      if (!resp.ok) throw new Error(await readApiError(resp));
       const invData: InvoiceData = await resp.json();
       setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "done", data: invData } : i));
       toast({ title: "Texto da fatura analisado com IA" });
-    } catch {
-      setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "error" } : i));
-      toast({ title: "Erro ao analisar texto da fatura", variant: "destructive" });
+    } catch (err) {
+      const message = err instanceof Error ?err.message : "Erro ao analisar texto da fatura";
+      setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "error", error: message } : i));
+      toast({ title: "Erro ao analisar texto da fatura", description: message, variant: "destructive" });
     } finally {
       setIsParsingText(false);
     }
@@ -474,7 +497,10 @@ export default function WizardStep1({ data, onChange }: Props) {
             <p className="text-xs text-muted-foreground mt-1">PDF ou imagem · até 12 faturas · extração automática com IA</p>
             <input
               ref={fileInputRef} type="file" multiple accept="application/pdf,image/*" className="hidden"
-              onChange={e => handleFiles(e.target.files)}
+              onChange={e => {
+                handleFiles(e.target.files);
+                e.currentTarget.value = "";
+              }}
             />
           </div>
 
@@ -931,6 +957,12 @@ function InvoiceCard({ inv, onRemove, onToggleEdit, onSaveEdit }: InvoiceCardPro
             <Trash2 size={14} />
           </button>
         </div>
+
+        {inv.status === "error" && inv.error && (
+          <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+            {inv.error}
+          </p>
+        )}
 
         {/* Summary chips */}
         {inv.status === "done" && !inv.showEdit && (
