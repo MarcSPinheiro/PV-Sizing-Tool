@@ -296,6 +296,7 @@ function WizardInner({ projectId }: { projectId: number }) {
   const [perfilDiurnoPct, setPerfilDiurnoPct] = useState(60);
 const [spacingRows, setSpacingRows] = useState<number | null>(null);
 const [spacingCols, setSpacingCols] = useState<number | null>(null);
+const [spacingMountType, setSpacingMountType] = useState<"triangulos" | "coplanar">("triangulos");
 const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "vertical">("vertical");
 
   const clienteForm = useForm<ClienteForm>({ resolver: zodResolver(clienteSchema), defaultValues: { tipoCliente: "particular", morada: "", tipoTarifa: "simples", potenciaContratada: 3.45 } });
@@ -2463,22 +2464,23 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
         const colunas = spacingCols ??suggestedCols;
         const fileiras = spacingRows ??suggestedRows;
         const totalLayoutPaineis = fileiras * colunas;
+        const isSpacingCoplanar = spacingMountType === "coplanar";
 
         const alturaSolar = Math.max(1, 90 - latitude - 23.45);
 
         const beta = inclinacao * Math.PI / 180;
         const alpha = alturaSolar * Math.PI / 180;
 
-        const alturaFila = painelNS * Math.sin(beta);
-        const projecaoHorizontal = painelNS * Math.cos(beta);
+        const alturaFila = isSpacingCoplanar ?0 : painelNS * Math.sin(beta);
+        const projecaoHorizontal = isSpacingCoplanar ?painelNS : painelNS * Math.cos(beta);
 
-        const sombraTotalSolo = alturaFila / Math.tan(alpha);
-        const espacoLivre = Math.max(0, sombraTotalSolo - projecaoHorizontal);
-        const sombraProjetada = Math.max(0, sombraTotalSolo - espacoLivre);
+        const sombraTotalSolo = isSpacingCoplanar ?0 : alturaFila / Math.tan(alpha);
+        const espacoLivre = isSpacingCoplanar ?0 : Math.max(0, sombraTotalSolo - projecaoHorizontal);
+        const sombraProjetada = isSpacingCoplanar ?0 : Math.max(0, sombraTotalSolo - espacoLivre);
 
-        const pitch = projecaoHorizontal + sombraProjetada + espacoLivre;
+        const pitch = isSpacingCoplanar ?painelNS : projecaoHorizontal + sombraProjetada + espacoLivre;
 
-        const dimensaoNS = fileiras * painelNS + Math.max(0, fileiras - 1) * (sombraProjetada + espacoLivre);
+        const dimensaoNS = fileiras * painelNS + Math.max(0, fileiras - 1) * (isSpacingCoplanar ?0 : sombraProjetada + espacoLivre);
         const dimensaoEO = colunas * painelEO;
         const areaTotal = dimensaoNS * dimensaoEO;
 
@@ -2528,6 +2530,26 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
 
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <p className="text-xs text-muted-foreground mb-2">Tipo de instalação</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant={spacingMountType === "triangulos" ?"default" : "outline"}
+                          onClick={() => setSpacingMountType("triangulos")}
+                        >
+                          Triângulos
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={spacingMountType === "coplanar" ?"default" : "outline"}
+                          onClick={() => setSpacingMountType("coplanar")}
+                        >
+                          Coplanar
+                        </Button>
+                      </div>
+                    </div>
+
                     <div>
                       <p className="text-xs text-muted-foreground">Latitude</p>
                       <Input value={fmt(latitude)} readOnly />
@@ -2589,8 +2611,11 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
 
                   <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm">
                     <p className="font-semibold text-amber-800">Condições consideradas</p>
-                    <p className="text-amber-700 mt-1">Solstício de inverno, 21 de dezembro, às 12:00.</p>
-                    <p className="text-amber-700">Painéis orientados a Sul, azimute 0°.</p>
+                    {isSpacingCoplanar && (
+                      <p className="text-amber-700 mt-1">Instalação coplanar: painéis no mesmo alinhamento, sem espaçamento entre fileiras.</p>
+                    )}
+                    <p className={cn("text-amber-700 mt-1", isSpacingCoplanar && "hidden")}>Solstício de inverno, 21 de dezembro, às 12:00.</p>
+                    <p className={cn("text-amber-700", isSpacingCoplanar && "hidden")}>Painéis orientados a Sul, azimute 0°.</p>
                   </div>
 
                   <div className="rounded-lg bg-sky-50 border border-sky-200 p-3 text-sm space-y-1">
@@ -2715,7 +2740,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                             ))}
                           </div>
 
-                          {r < fileiras - 1 && (
+                          {r < fileiras - 1 && !isSpacingCoplanar && (
                             <>
                               <div
                                 className="bg-slate-200/70 border border-dashed border-slate-400"
