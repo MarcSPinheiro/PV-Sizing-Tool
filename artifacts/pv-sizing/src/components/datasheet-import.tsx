@@ -31,6 +31,15 @@ interface Props {
   onBatchCreate?: (modelos: Array<Record<string, unknown>>) => Promise<void>;
 }
 
+async function readErrorMessage(resp: Response, fallback: string) {
+  try {
+    const body = await resp.json();
+    return typeof body?.error === "string" ? body.error : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function modelLabel(tipo: TipoEquipamento, d: Record<string, unknown>): string {
   const nome = String(d.nome ??"—");
   if (tipo === "inversor") {
@@ -90,7 +99,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
       fd.append("file", file);
       fd.append("tipoEquipamento", tipoEquipamento);
       const resp = await fetch(`${BASE}/api/tools/import-datasheet`, { method: "POST", headers: getAiHeaders(), body: fd });
-      if (!resp.ok) throw new Error(await resp.text());
+      if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar ficha técnica"));
       const r: DatasheetResult = await resp.json();
       applyResult(r);
       return;
@@ -136,7 +145,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         headers: { "Content-Type": "application/json", ...getAiHeaders() },
         body: JSON.stringify({ tipoEquipamento, texto: textInput }),
       });
-      if (!resp.ok) throw new Error(await resp.text());
+      if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar texto com IA"));
       const r: DatasheetResult = await resp.json();
       applyResult(r);
     } catch {

@@ -7,6 +7,7 @@ import { pvgisGet, pvgisSet } from "../lib/pvgis-cache";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
+const AI_MODEL = process.env.AI_MODEL || "claude-sonnet-4-6";
 
 function getAnthropicClient(req: { get?: (name: string) => string | undefined }) {
   const headerKey = req.get?.("x-anthropic-api-key")?.trim();
@@ -472,7 +473,7 @@ router.post(
       const contentBlock = buildFileBlock(isPdf, mimetype, base64);
 
       const message = await getAnthropicClient(req).messages.create({
-        model: "claude-opus-4-5",
+        model: AI_MODEL,
         max_tokens: 1024,
         messages: [
           {
@@ -566,7 +567,7 @@ router.post(
 
     try {
       const message = await getAnthropicClient(req).messages.create({
-        model: "claude-opus-4-5",
+        model: AI_MODEL,
         max_tokens: 1536,
         messages: [
           {
@@ -902,7 +903,7 @@ router.post(
 
     try {
       const message = await getAnthropicClient(req).messages.create({
-        model: "claude-opus-4-5",
+        model: AI_MODEL,
         max_tokens: 2048,
         messages: [
           {
@@ -1002,7 +1003,7 @@ router.post(
       const contentBlock = buildFileBlock(isPdf, mimetype, base64);
 
       const message = await getAnthropicClient(req).messages.create({
-        model: "claude-opus-4-5",
+        model: AI_MODEL,
         max_tokens: 4096,
         messages: [
           {
