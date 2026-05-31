@@ -44,6 +44,28 @@ function fmt(n: number, decimals = 0) {
 }
 function fmtEur(n: number) { return `${fmt(Math.round(n))} €`; }
 function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v)); }
+function calcIrr(cashflows: number[]): number {
+  let low = -0.99;
+  let high = 1;
+  const npv = (rate: number) =>
+    cashflows.reduce((sum, cf, i) => sum + cf / Math.pow(1 + rate, i), 0);
+  let npvLow = npv(low);
+  const npvHigh = npv(high);
+  if (!Number.isFinite(npvLow) || !Number.isFinite(npvHigh) || npvLow * npvHigh > 0) return 0;
+
+  for (let i = 0; i < 80; i++) {
+    const mid = (low + high) / 2;
+    const v = npv(mid);
+    if (Math.abs(v) < 0.01) return mid;
+    if (npvLow * v > 0) {
+      low = mid;
+      npvLow = v;
+    } else {
+      high = mid;
+    }
+  }
+  return (low + high) / 2;
+}
 
 // ─── Editable param field ──────────────────────────────────────────────────────
 function ParamField({
@@ -170,9 +192,7 @@ function WizardStep7Financeiro({
   const p25       = projecao[ANOS_VIDA - 1]?.poupancaAcum ?? 0;
   const npv25     = projecao[ANOS_VIDA - 1]?.npvAcum ?? 0;
   const paybackReal = (projecao.findIndex(r => r.poupancaAcum >= 0) + 1) || 0;
-  const irr       = p25 > 0 && investimentoEdit > 0
-    ? Math.pow((investimentoEdit + p25) / investimentoEdit, 1 / ANOS_VIDA) - 1
-    : 0;
+  const irr = calcIrr([-investimentoEdit, ...projecao.map(r => r.poupanca)]);
 
   return (
     <div className="space-y-4">

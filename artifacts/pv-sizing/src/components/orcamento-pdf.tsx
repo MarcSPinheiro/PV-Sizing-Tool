@@ -345,7 +345,7 @@ export default function OrcamentoPDF({ state, estudo }: Props) {
               <div style={{ flex: 1, background: "#fff", border: `1px solid ${ACCENT}`, borderRadius: 6, padding: "10px 12px", textAlign: "center" }}>
                 <div style={LABEL}>Payback Simples Est.</div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: ACCENT, marginTop: 4 }}>
-                  {estudo.paybackAnos} anos
+                  {estudo.paybackAnos > 25 ?"> 25" : estudo.paybackAnos} anos
                 </div>
                 <div style={{ fontSize: 9, color: "#6b7280", marginTop: 2 }}>com escalada tarifária 3%/ano</div>
               </div>

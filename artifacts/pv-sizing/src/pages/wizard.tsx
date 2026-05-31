@@ -78,7 +78,11 @@ const ReportBuilder = lazy(() => import("@/components/report/ReportBuilder"));
 import { type OrcamentoState, defaultOrcamentoState } from "@/lib/orcamento";
 import { type InverterUnit, criarUnidade } from "@/lib/multi-inverter";
 const WizardBatteryStudy = lazy(() => import("@/components/wizard-battery-study"));
-import { type BatteryUnit } from "@/components/wizard-battery-study";
+import {
+  calcBatteryStudy,
+  calcBatterySystem,
+  type BatteryUnit,
+} from "@/components/wizard-battery-study";
 import type { MapReportData } from "@/components/wizard-map-step";
 const WizardStep1Upgrade       = lazy(() => import("@/components/wizard-step1-upgrade"));
 const WizardStep6UpgradeAnalise = lazy(() => import("@/components/wizard-step6-upgrade-analise"));
@@ -726,24 +730,51 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       : 1;
     const producaoMensal = activeCenario.producaoMensal.map(v => Math.round(v * productionScale));
     const simResult = simulateAnual(producaoMensal, activeCenario.consumoMensal, perfilDiurnoPct);
-    const autoconsumoAnual = simResult.autoconsumoAnual;
-    const excessoAnual = simResult.excessoAnual;
-    const autoconsumoPerc = simResult.autoconsumoPerc;
+    let autoconsumoAnual = simResult.autoconsumoAnual;
+    let excessoAnual = simResult.excessoAnual;
+    let autoconsumoPerc = simResult.autoconsumoPerc;
+    if (consumoData.incluirBateria && batteries?.length && batteryUnits.length) {
+      const sys = calcBatterySystem(batteryUnits, batteries);
+      if (sys) {
+        const batteryStudy = calcBatteryStudy(
+          sys,
+          {
+            ...activeCenario,
+            autoconsumoMensal: simResult.autoconsumoMensal,
+            excessoMensal: simResult.excessoMensal,
+            autoconsumoAnual,
+            excessoAnual,
+            energiaAnualEstimada,
+          },
+          perfilDiurnoPct,
+          consumoData.precoKwh ??0.18,
+          {
+            percVazio: consumoData.percVazio,
+            percCheio: consumoData.percCheio,
+            percPonta: consumoData.percPonta,
+          },
+        );
+        autoconsumoAnual = Math.min(energiaAnualEstimada, autoconsumoAnual + batteryStudy.energiaEntregueAnual);
+        excessoAnual = Math.max(0, excessoAnual - batteryStudy.energiaArmazenadaAnual);
+        autoconsumoPerc = energiaAnualEstimada > 0
+          ?Math.round((autoconsumoAnual / energiaAnualEstimada) * 100)
+          : 0;
+      }
+    }
     const precoKwh = consumoData.precoKwh ??0.18;
     const poupancaAnual = autoconsumoAnual * precoKwh;
-    const paybackAnos = activeCenario.paybackAnos;
     const receitaExcedente = excessoAnual * PRECO_INJECAO_ORC;
     const investimento = investimentoManual ??activeCenario.investimentoEstimado;
     let poupancaAcum = -investimento;
     let npvAcum = -investimento;
-    let p10 = 0, p15 = 0, p25 = 0, npv25 = 0, paybackReal = paybackAnos;
+    let p10 = 0, p15 = 0, p25 = 0, npv25 = 0, paybackReal = 0;
     for (let ano = 1; ano <= 25; ano++) {
       const d = Math.pow(1 - 0.005, ano - 1);
       const t = Math.pow(1 + 0.03, ano - 1);
       const fluxo = poupancaAnual * d * t + receitaExcedente * d;
       poupancaAcum += fluxo;
       npvAcum += fluxo / Math.pow(1 + 0.04, ano);
-      if (poupancaAcum >= 0 && paybackReal === paybackAnos) paybackReal = ano;
+      if (poupancaAcum >= 0 && paybackReal === 0) paybackReal = ano;
       if (ano === 10) p10 = poupancaAcum;
       if (ano === 15) p15 = poupancaAcum;
       if (ano === 25) { p25 = poupancaAcum; npv25 = npvAcum; }
@@ -756,7 +787,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       excessoAnual,
       autoconsumoPerc,
       poupancaAnual:     Math.round(poupancaAnual + receitaExcedente),
-      paybackAnos:       paybackReal,
+      paybackAnos:       paybackReal > 0 ?paybackReal : 26,
       investimento,
       poupanca10:        Math.round(p10),
       poupanca15:        Math.round(p15),
@@ -764,7 +795,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       npv25:             Math.round(npv25),
       co2Anual:          Math.round(autoconsumoAnual * 0.253 / 1000 * 10) / 10,
     };
-  }, [activeCenario, effectiveSizing, consumoData.precoKwh, perfilDiurnoPct, investimentoManual]);
+  }, [activeCenario, effectiveSizing, consumoData, perfilDiurnoPct, investimentoManual, batteries, batteryUnits]);
 
   // Compare manual vs active cenario (not the equilibrado top-level values)
   const isManualModified = useMemo(() => {
@@ -809,6 +840,51 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCenario, isManualModified, manual, sizing, perfilDiurnoPct]);
+
+  const financialCenario = useMemo<AutoSizeCenario | null>(() => {
+    if (!chartCenario) return null;
+    if (!consumoData.incluirBateria || !batteries?.length || batteryUnits.length === 0) {
+      return chartCenario;
+    }
+    const sys = calcBatterySystem(batteryUnits, batteries);
+    if (!sys) return chartCenario;
+    const batteryStudy = calcBatteryStudy(
+      sys,
+      chartCenario,
+      perfilDiurnoPct,
+      consumoData.precoKwh ??0.18,
+      {
+        percVazio: consumoData.percVazio,
+        percCheio: consumoData.percCheio,
+        percPonta: consumoData.percPonta,
+      },
+    );
+    const autoconsumoAnual = Math.min(
+      chartCenario.energiaAnualEstimada,
+      chartCenario.autoconsumoAnual + batteryStudy.energiaEntregueAnual,
+    );
+    const excessoAnual = Math.max(0, chartCenario.excessoAnual - batteryStudy.energiaArmazenadaAnual);
+    const autoconsumoPerc = chartCenario.energiaAnualEstimada > 0
+      ?Math.round((autoconsumoAnual / chartCenario.energiaAnualEstimada) * 100)
+      : 0;
+    const ganhoMensalTotal = batteryStudy.ganhoMensal.reduce((a, b) => a + b, 0) || 1;
+    const autoconsumoMensal = chartCenario.autoconsumoMensal.map((v, i) =>
+      Math.min(chartCenario.producaoMensal[i] ??v, Math.round(v + batteryStudy.ganhoMensal[i])),
+    );
+    const excessoMensal = chartCenario.excessoMensal.map((v, i) => {
+      const share = batteryStudy.ganhoMensal[i] / ganhoMensalTotal;
+      return Math.max(0, Math.round(v - batteryStudy.energiaArmazenadaAnual * share));
+    });
+    return {
+      ...chartCenario,
+      autoconsumoMensal,
+      excessoMensal,
+      autoconsumoAnual: Math.round(autoconsumoAnual),
+      excessoAnual: Math.round(excessoAnual),
+      autoconsumoPerc,
+      poupancaAnual: Math.round(autoconsumoAnual * (consumoData.precoKwh ??0.18) * 100) / 100,
+    };
+  }, [chartCenario, consumoData, batteries, batteryUnits, perfilDiurnoPct]);
 
   // —— Potência DC efectiva para sugestões (usa painel seleccionado no passo 5) ——
   const panelIdStep5 = equipForm.watch("panelId");
@@ -1009,6 +1085,18 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
     const reportSizing = eff
       ?{
           ...eff,
+          ...(financialCenario
+            ?{
+                potenciaInstalada: financialCenario.potenciaInstalada,
+                potenciaRecomendada: financialCenario.potenciaInstalada,
+                numPaineis: financialCenario.numPaineis,
+                energiaAnualEstimada: financialCenario.energiaAnualEstimada,
+                coberturaReal: financialCenario.coberturaReal,
+                autoconsumoAnual: financialCenario.autoconsumoAnual,
+                excessoAnual: financialCenario.excessoAnual,
+                autoconsumoPerc: financialCenario.autoconsumoPerc,
+              }
+            : {}),
           cenariosDimensionamento: cenariosDimensionamentoAdj,
           poupancaAnual: estudoFinanceiro?.poupancaAnual ??activeCenario?.poupancaAnual,
           investimentoEstimado: estudoFinanceiro?.investimento ??activeCenario?.investimentoEstimado,
@@ -1036,6 +1124,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
     };
   }, [
     effectiveSizing,
+    financialCenario,
     sizing,
     cenariosDimensionamentoAdj,
     estudoFinanceiro,
@@ -2252,7 +2341,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                           batteries={batteries}
                           batteryUnits={batteryUnits}
                           onUnitsChange={setBatteryUnits}
-                          activeCenario={activeCenario ??null}
+                          activeCenario={chartCenario ??activeCenario ??null}
                           precoKwh={consumoData.precoKwh ??0.18}
                           perfilDiurnoPct={perfilDiurnoPct}
                           percVazio={consumoData.percVazio}
@@ -2373,14 +2462,14 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       })()}
 
       {/* —— STEP 7: Estudo de Poupança e Retorno ——————————————————————————————— */}
-      {step === 7 && activeCenario && (
+      {step === 7 && financialCenario && (
         <div className="space-y-4">
           {/* Upgrade savings comparison card */}
           {tipoProjeto !== "nova" && instalacaoExistente.producaoAnualkWh > 0 && (() => {
-            const producaoAdd = activeCenario.energiaAnualEstimada ??0;
+            const producaoAdd = financialCenario.energiaAnualEstimada ??0;
             const precoKwhUpg = consumoData.precoKwh ??0.18;
             const poupancaAdd = producaoAdd * precoKwhUpg;
-            const invest = investimentoManual ??activeCenario.investimentoEstimado;
+            const invest = investimentoManual ??financialCenario.investimentoEstimado;
             const payback = poupancaAdd > 0 && invest > 0 ?invest / poupancaAdd : null;
             return (
               <Card className="border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10">
@@ -2426,7 +2515,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
             );
           })()}
           <WizardStep7Financeiro
-            cenario={activeCenario}
+            cenario={financialCenario}
             precoKwh={consumoData.precoKwh ??0.18}
             consumoAnual={consumoData.consumoAnual}
             consumoDiurnoPct={perfilDiurnoPct}

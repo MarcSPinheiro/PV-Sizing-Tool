@@ -52,7 +52,7 @@ const ETA = 0.92; // round-trip efficiency
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function calcSystem(units: BatteryUnit[], bats: BatCat[]) {
+export function calcBatterySystem(units: BatteryUnit[], bats: BatCat[]) {
   const lines = units
     .map(u => ({ bat: bats.find(b => b.id === u.batteryId), qty: u.qty }))
     .filter((l): l is { bat: BatCat; qty: number } => !!l.bat && l.qty > 0);
@@ -76,8 +76,8 @@ function calcSystem(units: BatteryUnit[], bats: BatCat[]) {
   return { totalCap, utilCap, dodPct, potCarga, potDesc, tensao, lines, totalUnits };
 }
 
-function calcStudy(
-  sys: NonNullable<ReturnType<typeof calcSystem>>,
+export function calcBatteryStudy(
+  sys: NonNullable<ReturnType<typeof calcBatterySystem>>,
   cenario: CenarioLike,
   perfilDiurnoPct: number,
   precoKwh: number,
@@ -188,6 +188,8 @@ function calcStudy(
     excessoMedioDiario,
     energiaArmazenavel,
     energiaEntregue,
+    energiaArmazenadaAnual: armazenadoAnual,
+    energiaEntregueAnual: entregueAnual,
     percCargaDiaria,
     diasParaEncher,
     ganhoAnual,
@@ -237,10 +239,10 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
   const tariff = (percVazio != null && percCheio != null && percPonta != null && (percVazio + percCheio + percPonta) > 0)
     ? { percVazio, percCheio, percPonta } : undefined;
 
-  const sys = useMemo(() => calcSystem(batteryUnits, batteries), [batteryUnits, batteries]);
+  const sys = useMemo(() => calcBatterySystem(batteryUnits, batteries), [batteryUnits, batteries]);
   const study = useMemo(() => {
     if (!sys || !activeCenario) return null;
-    return calcStudy(sys, activeCenario, perfilDiurnoPct, precoKwh, tariff);
+    return calcBatteryStudy(sys, activeCenario, perfilDiurnoPct, precoKwh, tariff);
   }, [sys, activeCenario, perfilDiurnoPct, precoKwh, tariff?.percVazio, tariff?.percCheio, tariff?.percPonta]);
 
   // Derive night consumption per day for warnings (kWh/dia)
