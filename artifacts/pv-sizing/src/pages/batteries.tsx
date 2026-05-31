@@ -145,30 +145,6 @@ export default function Batteries() {
   const BatteryForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="fabricante" render={({ field }) => (
-            <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-          <FormField control={form.control} name="nome" render={({ field }) => (
-            <FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-          <FormField control={form.control} name="capacidade" render={({ field }) => (
-            <FormItem><FormLabel>Capacidade (kWh)</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-          <FormField control={form.control} name="tensao" render={({ field }) => (
-            <FormItem><FormLabel>Tensão Nominal (V)</FormLabel><FormControl><Input type="number" step="1" {...field} /></FormControl><FormMessage /></FormItem>
-          )} />
-          <FormField control={form.control} name="tecnologia" render={({ field }) => (
-            <FormItem><FormLabel>Tecnologia</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                <SelectContent>
-                  {TECNOLOGIAS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            <FormMessage /></FormItem>
-          )} />
-        </div>
         {!isEdit && (
           <DatasheetImport
             tipoEquipamento="bateria"
@@ -207,6 +183,30 @@ export default function Batteries() {
             }}
           />
         )}
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="fabricante" render={({ field }) => (
+            <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="nome" render={({ field }) => (
+            <FormItem><FormLabel>Modelo</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="capacidade" render={({ field }) => (
+            <FormItem><FormLabel>Capacidade (kWh)</FormLabel><FormControl><Input type="number" step="0.1" {...field} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="tensao" render={({ field }) => (
+            <FormItem><FormLabel>Tensão Nominal (V)</FormLabel><FormControl><Input type="number" step="1" {...field} /></FormControl><FormMessage /></FormItem>
+          )} />
+          <FormField control={form.control} name="tecnologia" render={({ field }) => (
+            <FormItem><FormLabel>Tecnologia</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                <SelectContent>
+                  {TECNOLOGIAS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            <FormMessage /></FormItem>
+          )} />
+        </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={isEdit ? updateBattery.isPending : createBattery.isPending}>
             {isEdit
@@ -236,7 +236,7 @@ export default function Batteries() {
               Nova Bateria
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[560px]">
+          <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nova Bateria</DialogTitle>
             </DialogHeader>
@@ -303,7 +303,7 @@ export default function Batteries() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-[560px]">
+                      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Editar Bateria</DialogTitle>
                         </DialogHeader>

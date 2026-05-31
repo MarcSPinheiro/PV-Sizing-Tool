@@ -226,6 +226,10 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
       </div>
 
       <div className="space-y-2 rounded-lg border bg-muted/20 p-3">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Sparkles size={15} className="text-primary" />
+          Pesquisar modelo ou preencher ficha com IA
+        </div>
         <Textarea
           value={textInput}
           onChange={(event) => setTextInput(event.target.value)}
@@ -238,10 +242,10 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
             variant="outline"
             size="sm"
             onClick={handleTextImport}
-            disabled={isLoading || textInput.trim().length < 10}
+            disabled={isLoading || textInput.trim().length < 3}
           >
             {isLoading ?<Loader2 size={14} className="mr-1.5 animate-spin" /> : <Sparkles size={14} className="mr-1.5" />}
-            Preencher com IA
+            Pesquisar / preencher com IA
           </Button>
         </div>
       </div>

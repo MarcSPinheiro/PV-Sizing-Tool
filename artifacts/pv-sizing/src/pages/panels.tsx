@@ -178,7 +178,7 @@ export default function Panels() {
               Novo Painel
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Novo Painel</DialogTitle>
             </DialogHeader>
@@ -339,7 +339,7 @@ export default function Panels() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-[600px]">
+                      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Editar Painel</DialogTitle>
                         </DialogHeader>
