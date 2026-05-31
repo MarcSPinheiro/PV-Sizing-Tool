@@ -371,17 +371,17 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       if (!prev) return prev;
       const next: OrcamentoState = {
         ...prev,
-        empresaNome: prev.empresaNome || company?.nome || "",
-        empresaMorada: prev.empresaMorada || company?.morada || "",
-        empresaNif: prev.empresaNif || company?.nif || "",
-        empresaTelefone: prev.empresaTelefone || company?.telefone || "",
-        empresaEmail: prev.empresaEmail || company?.email || "",
-        empresaWebsite: prev.empresaWebsite || company?.website || "",
-        empresaIban: prev.empresaIban || company?.iban || "",
-        empresaLogoUrl: prev.empresaLogoUrl || company?.logoUrl || null,
-        nomeCliente: prev.nomeCliente || selectedCustomer?.nome || "",
+        empresaNome: company?.nome || prev.empresaNome || "",
+        empresaMorada: company?.morada || prev.empresaMorada || "",
+        empresaNif: company?.nif || prev.empresaNif || "",
+        empresaTelefone: company?.telefone || prev.empresaTelefone || "",
+        empresaEmail: company?.email || prev.empresaEmail || "",
+        empresaWebsite: company?.website || prev.empresaWebsite || "",
+        empresaIban: company?.iban || prev.empresaIban || "",
+        empresaLogoUrl: company?.logoUrl || prev.empresaLogoUrl || null,
+        nomeCliente: selectedCustomer?.nome || prev.nomeCliente || "",
         nifCliente: prev.nifCliente || "",
-        moradaCliente: prev.moradaCliente || selectedCustomer?.morada || "",
+        moradaCliente: selectedCustomer?.morada || prev.moradaCliente || "",
         moradaInstalacao: prev.moradaInstalacao || clienteForm.getValues("morada") || "",
       };
       return JSON.stringify(next) === JSON.stringify(prev) ?prev : next;

@@ -862,6 +862,34 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     investimento: 0,
   }));
   const roi25 = investment && p25 != null ?(p25 / investment) * 100 : null;
+  const budgetVatRate = num(orcamento.taxaIva) ??23;
+  const budgetLines = Array.isArray(orcamento.linhas) ?orcamento.linhas as AnyRecord[] : [];
+  const budgetSubtotalFromLines = budgetLines.reduce((acc, line) => {
+    const qty = num(line.quantidade) ??0;
+    const unit = num(line.precoUnitario) ??0;
+    return acc + qty * unit;
+  }, 0);
+  const budgetVatFromLines = budgetLines.reduce((acc, line) => {
+    const qty = num(line.quantidade) ??0;
+    const unit = num(line.precoUnitario) ??0;
+    const vat = num(line.ivaPerc) ??budgetVatRate;
+    return acc + qty * unit * (vat / 100);
+  }, 0);
+  const budgetTotalFromLines = budgetSubtotalFromLines + budgetVatFromLines;
+  const budgetTotal =
+    budgetTotalFromLines > 0 ?budgetTotalFromLines :
+    num(orcamento.totalComIva) ??
+    num(orcamento.totalFinal) ??
+    investment;
+  const budgetSubtotal =
+    budgetSubtotalFromLines > 0 ?budgetSubtotalFromLines :
+    num(orcamento.subtotal) ??
+    num(orcamento.totalSemIva) ??
+    (budgetTotal != null ?budgetTotal / (1 + budgetVatRate / 100) : null);
+  const budgetVat =
+    budgetVatFromLines > 0 ?budgetVatFromLines :
+    num(orcamento.valorIva) ??
+    (budgetTotal != null && budgetSubtotal != null ?budgetTotal - budgetSubtotal : null);
 
   return (
     <article id="report-content" className="report-root bg-white text-slate-950 shadow-xl print:shadow-none">
@@ -1311,9 +1339,9 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
         {sections.includes("budget") && (
           <Section title="Orçamento">
             <div className="grid grid-cols-3 gap-3">
-              <Metric label="Subtotal" value={money(orcamento.subtotal ??orcamento.totalSemIva)} />
-              <Metric label="IVA" value={money(orcamento.valorIva)} />
-              <Metric label="Total" value={money(orcamento.totalComIva ?? orcamento.totalFinal ?? investment)} />
+              <Metric label="Subtotal" value={money(budgetSubtotal)} />
+              <Metric label="IVA" value={money(budgetVat)} />
+              <Metric label="Total" value={money(budgetTotal)} />
             </div>
           </Section>
         )}

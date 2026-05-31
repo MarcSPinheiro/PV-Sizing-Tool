@@ -176,6 +176,18 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                 <Field label="IBAN">
                   <Input value={state.empresaIban} onChange={e => set("empresaIban", e.target.value)} placeholder="PT50 0000 0000 0000 0000 0000 0" />
                 </Field>
+                <Field label="Logotipo">
+                  <div className="flex items-center gap-3">
+                    {state.empresaLogoUrl ?(
+                      <img src={state.empresaLogoUrl} alt="Logotipo" className="h-12 w-20 rounded border object-contain p-1" />
+                    ) : null}
+                    <Input
+                      value={state.empresaLogoUrl ??""}
+                      onChange={e => set("empresaLogoUrl", e.target.value)}
+                      placeholder="URL ou imagem em base64"
+                    />
+                  </div>
+                </Field>
               </CardContent>
             </Card>
 
