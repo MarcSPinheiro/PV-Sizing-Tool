@@ -15,6 +15,7 @@ export interface NewReportData {
   generatedAt: string;
   project: unknown;
   customer: AnyRecord | null;
+  company?: AnyRecord | null;
   draft: (AnyRecord & {
     clienteData?: AnyRecord | null;
     consumoData?: AnyRecord | null;
@@ -752,6 +753,7 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     projectName,
     generatedAt,
     customer,
+    company,
     draft,
     panel,
     inverters,
@@ -769,6 +771,8 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
   const manual = draft?.manual ??{};
   const map = draft?.reportMapData ??null;
   const orcamento = draft?.orcamentoState ??{};
+  const companyName = text(company?.nome) ?? text(orcamento.empresaNome) ?? "SolarDim";
+  const companyLogo = text(company?.logoUrl) ?? text(orcamento.empresaLogoUrl);
 
   const scenarios = (sizing.cenariosDimensionamento as AnyRecord[] | undefined) ??[];
   const activeScenario =
@@ -803,8 +807,8 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     consumo: monthlyConsumption[index] ?? 0,
   }));
   const annualSavings =
-    num(activeScenario?.poupancaAnual) ??
     num(sizing.poupancaAnual) ??
+    num(activeScenario?.poupancaAnual) ??
     num(orcamento.poupancaAnual);
   const annualConsumption =
     num(sizing.consumoAnualAjustado) ??
@@ -814,6 +818,7 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
   const currentBill = annualConsumption ? annualConsumption * energyPrice : null;
   const investment =
     num(draft?.investimentoManual) ??
+    num(sizing.investimentoEstimado) ??
     num(activeScenario?.investimentoEstimado) ??
     num(orcamento.totalComIva) ??
     num(orcamento.totalFinal);
@@ -864,11 +869,15 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
         <div className="report-page flex min-h-[29.7cm] flex-col justify-between p-12">
           <div>
             <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-lg bg-amber-500 text-2xl font-bold text-white">
-                S
-              </div>
+              {companyLogo ? (
+                <img src={companyLogo} alt={companyName} className="h-14 w-20 object-contain" />
+              ) : (
+                <div className="grid h-12 w-12 place-items-center rounded-lg bg-amber-500 text-2xl font-bold text-white">
+                  S
+                </div>
+              )}
               <div>
-                <p className="text-2xl font-black text-slate-950">SolarDim</p>
+                <p className="text-2xl font-black text-slate-950">{companyName}</p>
                 <p className="text-sm font-semibold text-slate-500">Relatório técnico fotovoltaico</p>
               </div>
             </div>
@@ -912,7 +921,16 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
       <div className="report-page min-h-[29.7cm] space-y-8 p-12">
         {sections.includes("page1Client") && (
           <Section title="1. Cliente e localização">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-3 gap-6">
+              <DataTable
+                rows={[
+                  ["Empresa", companyName],
+                  ["NIF", text(company?.nif) ?? text(orcamento.empresaNif) ?? "-"],
+                  ["Telefone", text(company?.telefone) ?? text(orcamento.empresaTelefone) ?? "-"],
+                  ["Email", text(company?.email) ?? text(orcamento.empresaEmail) ?? "-"],
+                  ["Morada", text(company?.morada) ?? text(orcamento.empresaMorada) ?? "-"],
+                ]}
+              />
               <DataTable
                 rows={[
                   ["Nome", text(cliente.nome) ?? text(customer?.nome) ?? "-"],

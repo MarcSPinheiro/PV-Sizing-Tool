@@ -8,6 +8,7 @@ import {
   useListInverters,
   useListBatteries,
   useListLocations,
+  useListCustomers,
   useCreateProposal,
   useGetProject,
   getGetProjectQueryKey,
@@ -279,6 +280,7 @@ function WizardInner({ projectId }: { projectId: number }) {
   const { data: panels }    = useListPanels();
   const { data: inverters } = useListInverters();
   const { data: batteries } = useListBatteries();
+  const { data: customers } = useListCustomers();
   const { data: locations } = useListLocations();
   const createProposal      = useCreateProposal();
 
@@ -286,6 +288,10 @@ function WizardInner({ projectId }: { projectId: number }) {
   const { setPanel: setPanelCtx } = usePanelCtx();
   const { setLocation: setSolarLocation, setParams: setSolarParams } = useSolar();
   const { mapData: mapaCtxData, setMapData } = useMapa();
+  const selectedCustomer = useMemo(
+    () => customers?.find((customer) => customer.id === projectRow?.customerId) ??null,
+    [customers, projectRow?.customerId],
+  );
 
   const [perfilDiurnoPct, setPerfilDiurnoPct] = useState(60);
 const [spacingRows, setSpacingRows] = useState<number | null>(null);
@@ -344,11 +350,44 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       numeroPaineis:    numPaineis,
       investimentoTotal: investimento,
       moradaInstalacao: clienteForm.getValues("morada"),
+      empresaNome: company?.nome,
+      empresaMorada: company?.morada,
+      empresaNif: company?.nif,
+      empresaTelefone: company?.telefone,
+      empresaEmail: company?.email,
+      empresaWebsite: company?.website,
+      empresaIban: company?.iban,
+      empresaLogoUrl: company?.logoUrl,
+      nomeCliente: selectedCustomer?.nome,
+      nifCliente: "",
+      moradaCliente: selectedCustomer?.morada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   // —— Project hydration: restore state from project.draftData on first load ——
+  useEffect(() => {
+    setOrcamentoState((prev) => {
+      if (!prev) return prev;
+      const next: OrcamentoState = {
+        ...prev,
+        empresaNome: prev.empresaNome || company?.nome || "",
+        empresaMorada: prev.empresaMorada || company?.morada || "",
+        empresaNif: prev.empresaNif || company?.nif || "",
+        empresaTelefone: prev.empresaTelefone || company?.telefone || "",
+        empresaEmail: prev.empresaEmail || company?.email || "",
+        empresaWebsite: prev.empresaWebsite || company?.website || "",
+        empresaIban: prev.empresaIban || company?.iban || "",
+        empresaLogoUrl: prev.empresaLogoUrl || company?.logoUrl || null,
+        nomeCliente: prev.nomeCliente || selectedCustomer?.nome || "",
+        nifCliente: prev.nifCliente || "",
+        moradaCliente: prev.moradaCliente || selectedCustomer?.morada || "",
+        moradaInstalacao: prev.moradaInstalacao || clienteForm.getValues("morada") || "",
+      };
+      return JSON.stringify(next) === JSON.stringify(prev) ?prev : next;
+    });
+  }, [company, selectedCustomer, clienteForm]);
+
   useEffect(() => {
     if (hydratedRef.current) return;
     if (!projectRow) return;
@@ -951,6 +990,60 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
   };
 
   const progress = ((step - 1) / (STEPS.length - 1)) * 100;
+  const liveReportDraft = useMemo(() => {
+    const eff = effectiveSizing ??sizing;
+    const reportSizing = eff
+      ?{
+          ...eff,
+          cenariosDimensionamento: cenariosDimensionamentoAdj,
+          poupancaAnual: estudoFinanceiro?.poupancaAnual ??activeCenario?.poupancaAnual,
+          investimentoEstimado: estudoFinanceiro?.investimento ??activeCenario?.investimentoEstimado,
+        }
+      : null;
+
+    return {
+      clienteData: clienteForm.getValues() as unknown as Record<string, unknown>,
+      consumoData: consumoData as unknown as Record<string, unknown>,
+      locData: (locData ??locForm.getValues()) as unknown as Record<string, unknown>,
+      sizing: reportSizing as unknown as Record<string, unknown> | null,
+      selectedCenarioTipo,
+      manual: manual as unknown as Record<string, unknown> | null,
+      showManualAdjust,
+      equipFormValues: equipForm.getValues(),
+      numPaineisStep5,
+      inverterUnits: inverterUnits as unknown as Record<string, unknown>[],
+      batteryUnits: batteryUnits as unknown as Record<string, unknown>[],
+      tipoProjeto,
+      investimentoManual,
+      panelRefId,
+      mapData: mapaCtxData as unknown as Record<string, unknown> | null,
+      reportMapData: reportMapData as unknown as Record<string, unknown> | null,
+      orcamentoState: orcamentoState as unknown as Record<string, unknown> | null,
+    };
+  }, [
+    effectiveSizing,
+    sizing,
+    cenariosDimensionamentoAdj,
+    estudoFinanceiro,
+    activeCenario,
+    consumoData,
+    locData,
+    locForm,
+    selectedCenarioTipo,
+    manual,
+    showManualAdjust,
+    equipForm,
+    numPaineisStep5,
+    inverterUnits,
+    batteryUnits,
+    tipoProjeto,
+    investimentoManual,
+    panelRefId,
+    mapaCtxData,
+    reportMapData,
+    orcamentoState,
+    clienteForm,
+  ]);
 
   const addInverterUnit = useCallback(() => {
     setInverterUnits(prev => {
@@ -2829,7 +2922,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       )}
       {step === 11 && (
         <div className="h-[calc(100vh-220px)] min-h-[760px] overflow-hidden rounded-lg border bg-white shadow-sm">
-          <ReportBuilder projectId={projectId} />
+          <ReportBuilder projectId={projectId} draftOverride={liveReportDraft} companyOverride={company} />
         </div>
       )}
 

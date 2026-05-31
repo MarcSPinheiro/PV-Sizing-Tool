@@ -20,6 +20,7 @@ export interface OrcamentoState {
   empresaEmail: string;
   empresaWebsite: string;
   empresaIban: string;
+  empresaLogoUrl?: string | null;
   nomeCliente: string;
   nifCliente: string;
   moradaCliente: string;
@@ -51,6 +52,17 @@ export interface OrcamentoDefaultParams {
   numeroPaineis?: number;
   investimentoTotal?: number;
   moradaInstalacao?: string;
+  empresaNome?: string;
+  empresaMorada?: string | null;
+  empresaNif?: string | null;
+  empresaTelefone?: string | null;
+  empresaEmail?: string | null;
+  empresaWebsite?: string | null;
+  empresaIban?: string | null;
+  empresaLogoUrl?: string | null;
+  nomeCliente?: string | null;
+  nifCliente?: string | null;
+  moradaCliente?: string | null;
 }
 
 function linha(descricao: string, quantidade: number, preco = 0, iva = 23, codigo = ""): LinhaOrcamento {
@@ -69,6 +81,17 @@ export function defaultOrcamentoState(p: OrcamentoDefaultParams = {}): Orcamento
     numeroPaineis = 0,
     investimentoTotal = 0,
     moradaInstalacao = "",
+    empresaNome = "",
+    empresaMorada = "",
+    empresaNif = "",
+    empresaTelefone = "",
+    empresaEmail = "",
+    empresaWebsite = "",
+    empresaIban = "",
+    empresaLogoUrl = null,
+    nomeCliente = "",
+    nifCliente = "",
+    moradaCliente = "",
   } = p;
 
   const panelDesc = [panelFabricante, panelNome, panelPotencia ?`${panelPotencia}W` : null]
@@ -107,16 +130,17 @@ export function defaultOrcamentoState(p: OrcamentoDefaultParams = {}): Orcamento
     validadeDias: 15,
     moeda: "EUR",
     taxaIva: 23,
-    empresaNome: "",
-    empresaMorada: "",
-    empresaNif: "",
-    empresaTelefone: "",
-    empresaEmail: "",
-    empresaWebsite: "",
-    empresaIban: "",
-    nomeCliente: "",
-    nifCliente: "",
-    moradaCliente: "",
+    empresaNome: empresaNome ?? "",
+    empresaMorada: empresaMorada ?? "",
+    empresaNif: empresaNif ?? "",
+    empresaTelefone: empresaTelefone ?? "",
+    empresaEmail: empresaEmail ?? "",
+    empresaWebsite: empresaWebsite ?? "",
+    empresaIban: empresaIban ?? "",
+    empresaLogoUrl,
+    nomeCliente: nomeCliente ?? "",
+    nifCliente: nifCliente ?? "",
+    moradaCliente: moradaCliente ?? "",
     moradaInstalacao,
     linhas,
     observacoes:

@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, FileText, Printer, RefreshCw } from "lucide-react";
+import { useAuth, type Company } from "@/lib/auth";
 import type { InverterUnit } from "@/lib/multi-inverter";
 import type { BatteryUnit } from "@/components/wizard-battery-study";
 import type { MapReportData } from "@/components/wizard-map-step";
@@ -39,9 +40,9 @@ type DraftData = Record<string, unknown> & {
   sizing?: Record<string, unknown> | null;
   manual?: Record<string, unknown> | null;
   equipFormValues?: { panelId?: number; inverterId?: number; batteryId?: number };
-  inverterUnits?: InverterUnit[];
-  batteryUnits?: BatteryUnit[];
-  reportMapData?: MapReportData | null;
+  inverterUnits?: Array<InverterUnit | Record<string, unknown>>;
+  batteryUnits?: Array<BatteryUnit | Record<string, unknown>>;
+  reportMapData?: MapReportData | Record<string, unknown> | null;
   orcamentoState?: Record<string, unknown> | null;
   selectedCenarioTipo?: string;
   investimentoManual?: number | null;
@@ -52,6 +53,8 @@ type DraftData = Record<string, unknown> & {
 
 interface Props {
   projectId: number | null;
+  draftOverride?: Record<string, unknown> | null;
+  companyOverride?: Company | null;
 }
 
 function findById<T extends { id: number }>(items: T[] | undefined, id: number | null | undefined) {
@@ -59,7 +62,7 @@ function findById<T extends { id: number }>(items: T[] | undefined, id: number |
   return items?.find((item) => item.id === id) ??null;
 }
 
-export default function ReportBuilder({ projectId }: Props) {
+export default function ReportBuilder({ projectId, draftOverride, companyOverride }: Props) {
   const [sections, setSections] = useState<ReportSection[]>(DEFAULT_SECTIONS);
   const [template, setTemplate] = useState("completo");
   const [showPreview, setShowPreview] = useState(true);
@@ -70,9 +73,12 @@ export default function ReportBuilder({ projectId }: Props) {
   const { data: panels } = useListPanels();
   const { data: inverters } = useListInverters();
   const { data: batteries } = useListBatteries();
+  const { company: authCompany } = useAuth();
 
-  const draft = (project?.draftData as DraftData | null | undefined) ??null;
+  const savedDraft = (project?.draftData as DraftData | null | undefined) ??null;
+  const draft = (draftOverride ??savedDraft) as DraftData | null;
   const customer: Customer | null = findById(customers, project?.customerId ??null);
+  const company = companyOverride ??authCompany ??null;
 
   const selectedPanelId =
     draft?.equipFormValues?.panelId ??
@@ -189,7 +195,8 @@ export default function ReportBuilder({ projectId }: Props) {
     }),
     project,
     customer: customer as unknown as Record<string, unknown> | null,
-    draft,
+    company: company as unknown as Record<string, unknown> | null,
+    draft: draft as NewReportData["draft"],
     panel,
     inverters: selectedInverters,
     batteries: selectedBatteries,

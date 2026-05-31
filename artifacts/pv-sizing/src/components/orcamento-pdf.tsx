@@ -59,7 +59,7 @@ export default function OrcamentoPDF({ state, estudo }: Props) {
   const {
     codigo, dataEmissao, validadeDias, moeda, taxaIva,
     empresaNome, empresaMorada, empresaNif, empresaTelefone, empresaEmail,
-    empresaWebsite, empresaIban,
+    empresaWebsite, empresaIban, empresaLogoUrl,
     nomeCliente, nifCliente, moradaCliente, moradaInstalacao,
     linhas, observacoes, condicoesPagamento, incluirEstudoEnergetico,
   } = state;
@@ -91,13 +91,21 @@ export default function OrcamentoPDF({ state, estudo }: Props) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "20px 32px 16px" }}>
         {/* Left: logo + company */}
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 6, background: ACCENT,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0,
-          }}>
-            {initials}
-          </div>
+          {empresaLogoUrl ? (
+            <img
+              src={empresaLogoUrl}
+              alt={empresaNome || "Logotipo"}
+              style={{ width: 72, height: 48, objectFit: "contain", flexShrink: 0 }}
+            />
+          ) : (
+            <div style={{
+              width: 48, height: 48, borderRadius: 6, background: ACCENT,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, fontWeight: 700, color: "#fff", flexShrink: 0,
+            }}>
+              {initials}
+            </div>
+          )}
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#111827", textTransform: "uppercase", letterSpacing: ".04em" }}>
               {empresaNome || "Nome da Empresa"}
