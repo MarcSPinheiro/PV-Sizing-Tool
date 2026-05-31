@@ -716,8 +716,21 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
   const PRECO_INJECAO_ORC = 0.06;
   const estudoFinanceiro = useMemo(() => {
     if (!activeCenario) return null;
-    const { potenciaInstalada, energiaAnualEstimada, autoconsumoPerc, autoconsumoAnual,
-            poupancaAnual, paybackAnos, excessoAnual } = activeCenario;
+    const eff = effectiveSizing ??activeCenario;
+    const potenciaInstalada = eff.potenciaInstalada ??activeCenario.potenciaInstalada;
+    const numPaineis = eff.numPaineis ??activeCenario.numPaineis;
+    const energiaAnualEstimada = eff.energiaAnualEstimada ??activeCenario.energiaAnualEstimada;
+    const productionScale = activeCenario.energiaAnualEstimada > 0
+      ?energiaAnualEstimada / activeCenario.energiaAnualEstimada
+      : 1;
+    const producaoMensal = activeCenario.producaoMensal.map(v => Math.round(v * productionScale));
+    const simResult = simulateAnual(producaoMensal, activeCenario.consumoMensal, perfilDiurnoPct);
+    const autoconsumoAnual = simResult.autoconsumoAnual;
+    const excessoAnual = simResult.excessoAnual;
+    const autoconsumoPerc = simResult.autoconsumoPerc;
+    const precoKwh = consumoData.precoKwh ??0.18;
+    const poupancaAnual = autoconsumoAnual * precoKwh;
+    const paybackAnos = activeCenario.paybackAnos;
     const receitaExcedente = excessoAnual * PRECO_INJECAO_ORC;
     const investimento = investimentoManual ??activeCenario.investimentoEstimado;
     let poupancaAcum = -investimento;
@@ -736,7 +749,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
     }
     return {
       potenciaInstalada,
-      numPaineis:        activeCenario.numPaineis,
+      numPaineis,
       producaoAnual:     energiaAnualEstimada,
       autoconsumoAnual,
       excessoAnual,
@@ -750,7 +763,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       npv25:             Math.round(npv25),
       co2Anual:          Math.round(autoconsumoAnual * 0.253 / 1000 * 10) / 10,
     };
-  }, [activeCenario, investimentoManual]);
+  }, [activeCenario, effectiveSizing, consumoData.precoKwh, perfilDiurnoPct, investimentoManual]);
 
   // Compare manual vs active cenario (not the equilibrado top-level values)
   const isManualModified = useMemo(() => {
