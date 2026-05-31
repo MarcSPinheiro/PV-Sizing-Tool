@@ -54,6 +54,7 @@ const customerSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
   morada: z.string().min(1, "Morada é obrigatória"),
   codigoPostal: z.string().optional(),
+  localidade: z.string().optional(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   tipoCliente: z.enum(["Residencial", "Comercial", "Industrial"]),
@@ -85,6 +86,7 @@ export default function Customers() {
       nome: "",
       morada: "",
       codigoPostal: "",
+      localidade: "",
       latitude: 38.7223, // Lisbon default
       longitude: -9.1393,
       tipoCliente: "Residencial",
@@ -97,26 +99,37 @@ export default function Customers() {
   });
 
   const toCustomerPayload = (data: CustomerFormValues) => {
-    const { codigoPostal, ...payload } = data;
+    const { codigoPostal, localidade, ...payload } = data;
     const trimmedPostal = codigoPostal?.trim();
+    const trimmedLocalidade = localidade?.trim();
+    const locationParts = [trimmedPostal, trimmedLocalidade].filter(Boolean);
+    const suffix = locationParts.join(" ");
     return {
       ...payload,
       morada:
-        trimmedPostal && !payload.morada.toLowerCase().includes(trimmedPostal.toLowerCase())
-          ? `${payload.morada}, ${trimmedPostal}`
+        suffix && !payload.morada.toLowerCase().includes(suffix.toLowerCase())
+          ? `${payload.morada}, ${suffix}`
           : payload.morada,
     };
   };
 
   const extractPostalCode = (morada: string) => morada.match(/\b\d{4}-\d{3}\b/)?.[0] ?? "";
 
+  const extractLocalidade = (morada: string) => {
+    const postal = extractPostalCode(morada);
+    if (!postal) return "";
+    const afterPostal = morada.slice(morada.indexOf(postal) + postal.length).replace(/^[,\s-]+/, "");
+    return afterPostal.split(",")[0]?.trim() ?? "";
+  };
+
   const updateCoordinatesFromAddress = async () => {
     const morada = form.getValues("morada")?.trim();
     const codigoPostal = form.getValues("codigoPostal")?.trim();
+    const localidade = form.getValues("localidade")?.trim();
 
-    if (!morada && !codigoPostal) {
+    if (!morada && !codigoPostal && !localidade) {
       toast({
-        title: "Indique a morada ou o código postal",
+        title: "Indique a morada, localidade ou código postal",
         variant: "destructive",
       });
       return;
@@ -124,11 +137,30 @@ export default function Customers() {
 
     setIsLocating(true);
     try {
-      const query = [morada, codigoPostal, "Portugal"].filter(Boolean).join(", ");
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pt&q=${encodeURIComponent(query)}`,
-      );
-      const results: Array<{ lat: string; lon: string; display_name?: string }> = await response.json();
+      const structured = new URLSearchParams({
+        format: "json",
+        limit: "1",
+        countrycodes: "pt",
+        country: "Portugal",
+      });
+      if (morada) structured.set("street", morada);
+      if (codigoPostal) structured.set("postalcode", codigoPostal);
+      if (localidade) structured.set("city", localidade);
+
+      const query = [morada, codigoPostal, localidade, "Portugal"].filter(Boolean).join(", ");
+      const fallback = new URLSearchParams({
+        format: "json",
+        limit: "1",
+        countrycodes: "pt",
+        q: query,
+      });
+
+      let response = await fetch(`https://nominatim.openstreetmap.org/search?${structured.toString()}`);
+      let results: Array<{ lat: string; lon: string; display_name?: string }> = await response.json();
+      if (!response.ok || results.length === 0) {
+        response = await fetch(`https://nominatim.openstreetmap.org/search?${fallback.toString()}`);
+        results = await response.json();
+      }
 
       if (!response.ok || results.length === 0) {
         throw new Error("Location not found");
@@ -147,7 +179,7 @@ export default function Customers() {
     } catch {
       toast({
         title: "Não foi possível encontrar essa localização",
-        description: "Confirme a morada e o código postal.",
+        description: "Confirme a morada, localidade e código postal.",
         variant: "destructive",
       });
     } finally {
@@ -204,6 +236,7 @@ export default function Customers() {
       nome: customer.nome,
       morada: customer.morada,
       codigoPostal: extractPostalCode(customer.morada),
+      localidade: extractLocalidade(customer.morada),
       latitude: customer.latitude,
       longitude: customer.longitude,
       tipoCliente: customer.tipoCliente as "Residencial" | "Comercial" | "Industrial",
@@ -258,7 +291,14 @@ export default function Customers() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <div className="flex items-end">
+                  <FormField control={form.control} name="localidade" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Localidade</FormLabel>
+                      <FormControl><Input placeholder="Ex.: São Pedro do Sul" {...field} value={field.value ?? ""} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <div className="col-span-2 flex items-end">
                     <Button type="button" variant="outline" className="w-full" onClick={updateCoordinatesFromAddress} disabled={isLocating}>
                       <LocateFixed className="mr-2 h-4 w-4" />
                       {isLocating ? "A localizar..." : "Atualizar coordenadas"}
@@ -416,7 +456,14 @@ export default function Customers() {
                                     <FormMessage />
                                   </FormItem>
                                 )} />
-                                <div className="flex items-end">
+                                <FormField control={form.control} name="localidade" render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Localidade</FormLabel>
+                                    <FormControl><Input placeholder="Ex.: São Pedro do Sul" {...field} value={field.value ?? ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )} />
+                                <div className="col-span-2 flex items-end">
                                   <Button type="button" variant="outline" className="w-full" onClick={updateCoordinatesFromAddress} disabled={isLocating}>
                                     <LocateFixed className="mr-2 h-4 w-4" />
                                     {isLocating ? "A localizar..." : "Atualizar coordenadas"}
