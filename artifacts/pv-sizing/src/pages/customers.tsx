@@ -123,13 +123,12 @@ export default function Customers() {
   };
 
   const updateCoordinatesFromAddress = async () => {
-    const morada = form.getValues("morada")?.trim();
     const codigoPostal = form.getValues("codigoPostal")?.trim();
     const localidade = form.getValues("localidade")?.trim();
 
-    if (!morada && !codigoPostal && !localidade) {
+    if (!codigoPostal && !localidade) {
       toast({
-        title: "Indique a morada, localidade ou código postal",
+        title: "Indique o código postal ou a localidade",
         variant: "destructive",
       });
       return;
@@ -143,11 +142,10 @@ export default function Customers() {
         countrycodes: "pt",
         country: "Portugal",
       });
-      if (morada) structured.set("street", morada);
       if (codigoPostal) structured.set("postalcode", codigoPostal);
       if (localidade) structured.set("city", localidade);
 
-      const query = [morada, codigoPostal, localidade, "Portugal"].filter(Boolean).join(", ");
+      const query = [codigoPostal, localidade, "Portugal"].filter(Boolean).join(", ");
       const fallback = new URLSearchParams({
         format: "json",
         limit: "1",
@@ -179,7 +177,7 @@ export default function Customers() {
     } catch {
       toast({
         title: "Não foi possível encontrar essa localização",
-        description: "Confirme a morada, localidade e código postal.",
+        description: "Confirme a localidade e o código postal.",
         variant: "destructive",
       });
     } finally {
