@@ -993,7 +993,7 @@ router.post(
           : "bateria de armazenamento";
 
     const schemaByType: Record<string, string> = {
-      painel: `{"nome":"string","fabricante":"string","potencia":number,"voc":number,"vmp":number,"isc":number,"imp":number,"coeficienteTemperatura":number}`,
+      painel: `{"nome":"string","fabricante":"string","potencia":number,"voc":number,"vmp":number,"isc":number,"imp":number,"coeficienteTemperatura":number,"coeficienteTemperaturaVoc":number,"noct":number,"alturaMm":number,"larguraMm":number}`,
       inversor: `{"nome":"string","fabricante":"string","potenciaAc":number,"potenciaDcMax":number,"mpptMin":number,"mpptMax":number,"corrMaxMppt":number,"numMppt":number,"stringsPorMppt":number}`,
       bateria: `{"nome":"string","fabricante":"string","capacidade":number,"tensao":number,"tecnologia":"LiFePO4|Li-ion|AGM|Gel"}`,
     };
@@ -1030,7 +1030,7 @@ Instruções importantes:
 - Se a tabela tiver colunas por modelo (ex: SUN-14K, SUN-15K, SUN-16K...), cria um registo separado para cada coluna.
 - Associa cada valor ao modelo correto — não mistures dados entre modelos.
 - Para inversores: potenciaAc e potenciaDcMax em Watts (W), mpptMin/mpptMax em Volts (V), corrMaxMppt em Amperes (A).
-- Para painéis: potencia em Watts pico (Wp), tensões em Volts, correntes em Amperes, coeficienteTemperatura em %/°C (valor negativo, ex: -0.35).
+- Para painéis: potencia em Watts pico (Wp), tensões em Volts, correntes em Amperes, coeficienteTemperatura e coeficienteTemperaturaVoc em %/°C (valores negativos, ex: -0.35 e -0.28), noct em °C, alturaMm/larguraMm em milímetros.
 - Para baterias: capacidade em kWh, tensao em Volts.
 - Se um valor não estiver disponível para um modelo, usa 0 (nunca null nos campos numéricos).
 - fabricante deve ser o mesmo para todos os modelos da mesma ficha.

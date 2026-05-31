@@ -200,6 +200,8 @@ export default function Panels() {
                                            : cur.coeficienteTemperatura,
                   coeficienteTemperaturaVoc: Number(d.coeficienteTemperaturaVoc) !== 0 ? Number(d.coeficienteTemperaturaVoc) : cur.coeficienteTemperaturaVoc,
                   noct: Number(d.noct) > 0 ? Number(d.noct) : cur.noct,
+                  alturaMm: Number(d.alturaMm) > 0 ? Math.round(Number(d.alturaMm)) : cur.alturaMm,
+                  larguraMm: Number(d.larguraMm) > 0 ? Math.round(Number(d.larguraMm)) : cur.larguraMm,
                 });
               }}
               onBatchCreate={async (modelos) => {
