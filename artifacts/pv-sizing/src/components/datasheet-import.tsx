@@ -77,7 +77,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
     const items: ModeloItem[] = (r.modelos ??[r.dados]).map(d => ({ dados: d, selecionado: true }));
     setModelos(items);
 
-    if (items.length === 1 && !onBatchCreate) {
+    if (items.length === 1) {
       onExtracted(items[0].dados);
       toast({
         title: `Dados extraídos (${(r.confianca * 100).toFixed(0)}% confiança)`,
