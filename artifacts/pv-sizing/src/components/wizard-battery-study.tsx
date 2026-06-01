@@ -89,11 +89,6 @@ export function calcBatteryStudy(
   const cFracs = tariff
     ? tariffHourlyProfile(tariff.percVazio, tariff.percCheio, tariff.percPonta)
     : consumoFracs(perfilDiurnoPct);
-  // Effective diurnal % for night-consumption cap (used in ganhoMensal calc)
-  const diurnoPctEff = tariff
-    ? dayNightFromTariff(tariff.percVazio, tariff.percCheio, tariff.percPonta).diurnoPct
-    : perfilDiurnoPct;
-
   // Fallback charger / inverter limits when not specified in the battery datasheet
   const maxCarga = sys.potCarga > 0 ? sys.potCarga : sys.totalCap / 2;
   const maxDesc  = sys.potDesc  > 0 ? sys.potDesc  : sys.totalCap;
@@ -102,6 +97,9 @@ export function calcBatteryStudy(
   let armazenadoAnual     = 0;  // energy stored in battery (annual)
   let entregueAnual       = 0;  // energy delivered from battery to loads (annual)
   const ganhoMensal: number[] = [];
+  const armazenadoMensal: number[] = [];
+  const entregueMensal: number[] = [];
+  const excedenteRestanteMensal: number[] = [];
 
   for (let m = 0; m < 12; m++) {
     // Monthly production = direct autoconsumo + grid export
@@ -140,12 +138,16 @@ export function calcBatteryStudy(
       }
     }
 
-    armazenadoAnual += armazenadoDia * DIAS_MES[m];
-    entregueAnual   += entregouDia   * DIAS_MES[m];
+    const armazenadoMes = armazenadoDia * DIAS_MES[m];
+    const entregueMes = entregouDia * DIAS_MES[m];
+    const excedenteRestanteMes = Math.max(0, (cenario.excessoMensal[m] ?? 0) - armazenadoMes);
 
-    // Monthly gain capped by nocturnal demand
-    const consumoNoturnoMes = cenario.consumoMensal[m] * (1 - diurnoPctEff / 100);
-    ganhoMensal.push(Math.round(Math.min(entregouDia * DIAS_MES[m], consumoNoturnoMes)));
+    armazenadoAnual += armazenadoMes;
+    entregueAnual   += entregueMes;
+    armazenadoMensal.push(Math.round(armazenadoMes));
+    entregueMensal.push(Math.round(entregueMes));
+    excedenteRestanteMensal.push(Math.round(excedenteRestanteMes));
+    ganhoMensal.push(Math.round(entregueMes));
   }
 
   // ── Derived KPIs ────────────────────────────────────────────────────────────
@@ -192,6 +194,9 @@ export function calcBatteryStudy(
     energiaEntregue,
     energiaArmazenadaAnual: armazenadoAnual,
     energiaEntregueAnual: entregueAnual,
+    armazenadoMensal,
+    entregueMensal,
+    excedenteRestanteMensal,
     percCargaDiaria,
     diasParaEncher,
     ganhoAnual,
@@ -249,31 +254,20 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
 
   const batteryChart = useMemo(() => {
     if (!study || !activeCenario) return null;
-    const ganhoTotal = study.ganhoMensal.reduce((a, b) => a + b, 0);
-    const excessoTotal = activeCenario.excessoMensal.reduce((a, b) => a + b, 0);
-    let excedenteComBateriaAnual = 0;
-
     const data = activeCenario.consumoMensal.map((consumo, i) => {
       const autoconsumoDireto = activeCenario.autoconsumoMensal[i] ?? 0;
-      const excedenteSemBat = activeCenario.excessoMensal[i] ?? 0;
-      const peso = ganhoTotal > 0
-        ? (study.ganhoMensal[i] ?? 0) / ganhoTotal
-        : (excessoTotal > 0 ? excedenteSemBat / excessoTotal : 0);
-      const energiaArmazenada = Math.min(excedenteSemBat, Math.round(study.energiaArmazenadaAnual * peso));
-      const excedenteComBat = Math.max(0, excedenteSemBat - energiaArmazenada);
-      excedenteComBateriaAnual += excedenteComBat;
       return {
         mes: MONTH_LABELS[i],
         autoconsumoDireto,
-        bateria: study.ganhoMensal[i] ?? 0,
-        excedenteComBat,
+        bateria: study.entregueMensal[i] ?? 0,
+        excedenteComBat: study.excedenteRestanteMensal[i] ?? 0,
         consumo,
       };
     });
 
     return {
       data,
-      excedenteComBateriaAnual,
+      excedenteComBateriaAnual: study.excedenteRestanteMensal.reduce((a, b) => a + b, 0),
       autoconsumoComBateria: activeCenario.autoconsumoAnual + study.ganhoAnual,
     };
   }, [study, activeCenario]);
