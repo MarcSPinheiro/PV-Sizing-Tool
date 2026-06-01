@@ -259,7 +259,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
       return {
         mes: MONTH_LABELS[i],
         autoconsumoDireto,
-        bateria: study.entregueMensal[i] ?? 0,
+        bateria: study.armazenadoMensal[i] ?? 0,
         excedenteComBat: study.excedenteRestanteMensal[i] ?? 0,
         consumo,
       };
@@ -590,7 +590,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                   <div>
                     <p className="font-semibold text-sm">Produção Estimada vs Consumo Mensal — Com Bateria</p>
                     <p className="text-xs text-muted-foreground">
-                      Autoconsumo direto + energia da bateria + excedente restante vs. consumo
+                      Autoconsumo direto + carga da bateria + excedente restante vs. consumo
                     </p>
                   </div>
 
@@ -602,7 +602,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                         formatter={(value: number, name: string) => {
                           const labels: Record<string, string> = {
                             autoconsumoDireto: "Autoconsumo direto",
-                            bateria: "Bateria",
+                            bateria: "Carga da bateria",
                             excedenteComBat: "Excedente restante",
                             consumo: "Consumo",
                           };
@@ -615,7 +615,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                         formatter={(value) => {
                           const labels: Record<string, string> = {
                             autoconsumoDireto: "Autoconsumo direto",
-                            bateria: "Bateria",
+                            bateria: "Carga da bateria",
                             excedenteComBat: "Excedente restante",
                             consumo: "Consumo",
                           };
