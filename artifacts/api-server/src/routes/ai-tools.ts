@@ -190,7 +190,7 @@ async function fetchPvgisMonthlyKwhPerKwp(
   // azimute 0 = South (from-South convention, same as PVGIS aspect)
   const url =
     `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?` +
-    `lat=${lat}&lon=${lon}&peakpower=1&loss=0` +
+    `lat=${lat}&lon=${lon}&peakpower=1&loss=14` +
     `&angle=${inclinacao}&aspect=${azimute}` +
     `&outputformat=json&mountingplace=building`;
 
@@ -220,7 +220,7 @@ async function fetchPvgisMonthlyKwhPerKwp(
 
   const monthly = data.outputs?.monthly?.fixed;
   if (!monthly || monthly.length !== 12) return null;
-  // Return gross monthly kWh per kWp. The app applies its global yield/loss factor once.
+  // Return net monthly kWh per kWp. PVGIS already includes the configured system loss.
   return monthly.map(e => e.E_m);
 }
 
@@ -319,7 +319,7 @@ interface CenarioParams {
   capacidadeBateriaBase: number | null;
   custoBateria: number;
   // Enhanced engine fields
-  pvgisMonthlyKwhPerKwp?: number[];  // 12 gross values from PVGIS (loss=0)
+  pvgisMonthlyKwhPerKwp?: number[];  // 12 net values from PVGIS (loss=14)
   consumoMensalInput?: number[];     // 12 values from invoice data
   perfilDiurnoPct: number;           // daytime consumption % for hourly simulation
 }
@@ -330,14 +330,15 @@ function buildCenario(p: CenarioParams) {
   // Panel sizing (always uses HSP for conservative sizing)
   const energiaAlvoDiaria = consumoDiario * (p.coberturaMeta / 100);
   const potenciaBruta = energiaAlvoDiaria / p.hsp;
-  const potenciaMinima = potenciaBruta / p.fatorRendimento;
+  const rendimentoDimensionamento = p.pvgisMonthlyKwhPerKwp ? 1 : p.fatorRendimento;
+  const potenciaMinima = potenciaBruta / rendimentoDimensionamento;
   const numPaineis = Math.ceil((potenciaMinima * 1000) / 400);
   const potenciaInstalada = Math.round(numPaineis * 400) / 1000;
 
   // Monthly production: use PVGIS real data if available, else HSP formula
   const fonteProducao: "pvgis" | "estimativa_hsp" = p.pvgisMonthlyKwhPerKwp ? "pvgis" : "estimativa_hsp";
   const producaoMensal = p.pvgisMonthlyKwhPerKwp
-    ? p.pvgisMonthlyKwhPerKwp.map(v => Math.round(v * potenciaInstalada * p.fatorRendimento))
+    ? p.pvgisMonthlyKwhPerKwp.map(v => Math.round(v * potenciaInstalada))
     : PT_MONTHLY_FACTORS.map((factor, m) =>
         Math.round(potenciaInstalada * p.hsp * factor * DAYS_PER_MONTH[m] * p.fatorRendimento),
       );
@@ -761,11 +762,12 @@ router.post("/tools/auto-size", calcLimiter, async (req, res): Promise<void> => 
 
   const potenciaInstalada = cenEquilibrado.potenciaInstalada;
   const numPaineis = cenEquilibrado.numPaineis;
+  const rendimentoDimensionamento = pvgisMonthlyKwhPerKwp ? 1 : fatorRendimento;
   const potenciaMinima =
     Math.round(
       (((consumoAnualAjustado / 365) * (coberturaMeta / 100)) /
         hsp /
-        fatorRendimento) *
+        rendimentoDimensionamento) *
         100,
     ) / 100;
   const energiaAnualEstimada = cenEquilibrado.energiaAnualEstimada;
@@ -777,7 +779,9 @@ router.post("/tools/auto-size", calcLimiter, async (req, res): Promise<void> => 
   const cenariosPaineis = WATTAGES.map((wp) => {
     const quantidade = Math.ceil((potenciaMinima * 1000) / wp);
     const potInst = Math.round(quantidade * wp) / 1000;
-    const energiaAnual = Math.round(potInst * hsp * 365 * fatorRendimento);
+    const energiaAnual = pvgisMonthlyKwhPerKwp
+      ? Math.round(pvgisMonthlyKwhPerKwp.reduce((a, b) => a + b, 0) * potInst)
+      : Math.round(potInst * hsp * 365 * fatorRendimento);
     const coberturaScenario = Math.min(
       100,
       Math.round((energiaAnual / consumoAnualAjustado) * 1000) / 10,
@@ -801,9 +805,12 @@ router.post("/tools/auto-size", calcLimiter, async (req, res): Promise<void> => 
   const fonteTexto = pvgisMonthlyKwhPerKwp
     ? "Produção calculada com dados reais PVGIS (JRC)."
     : "Produção estimada por HSP médio local (PVGIS indisponível).";
+  const rendimentoTexto = pvgisMonthlyKwhPerKwp
+    ? "Perdas incluídas no PVGIS."
+    : `Fator de rendimento: ${(fatorRendimento * 100).toFixed(0)}%.`;
   const explicacao =
     `Consumo base: ${consumoAnualBase.toFixed(0)} kWh/ano${crescimentoTexto} → ${consumoDiario.toFixed(1)} kWh/dia. ` +
-    `HSP estimado: ${hsp.toFixed(2)} h/dia. Fator de rendimento: ${(fatorRendimento * 100).toFixed(0)}%. ` +
+    `HSP estimado: ${hsp.toFixed(2)} h/dia. ${rendimentoTexto} ` +
     `Cenário Equilibrado (${coberturaMeta}% cobertura): ${numPaineis} painéis × 400 Wp = ${potenciaInstalada} kWp instalados, ` +
     `produção anual ${energiaAnualEstimada.toLocaleString("pt-PT")} kWh → cobertura real ${coberturaReal}%. ` +
     `${fonteTexto}` +

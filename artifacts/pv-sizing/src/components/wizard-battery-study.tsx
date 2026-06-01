@@ -12,6 +12,7 @@ import {
   Battery, Plus, Trash2, AlertTriangle, CheckCircle2,
   TrendingUp, Zap, Info, ChevronRight, Lightbulb, Euro,
 } from "lucide-react";
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import type { Battery as BatCat } from "@workspace/api-client-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -49,6 +50,7 @@ interface Props {
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const ETA = 0.92; // round-trip efficiency
+const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -244,6 +246,37 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
     if (!sys || !activeCenario) return null;
     return calcBatteryStudy(sys, activeCenario, perfilDiurnoPct, precoKwh, tariff);
   }, [sys, activeCenario, perfilDiurnoPct, precoKwh, tariff?.percVazio, tariff?.percCheio, tariff?.percPonta]);
+
+  const batteryChart = useMemo(() => {
+    if (!study || !activeCenario) return null;
+    const ganhoTotal = study.ganhoMensal.reduce((a, b) => a + b, 0);
+    const excessoTotal = activeCenario.excessoMensal.reduce((a, b) => a + b, 0);
+    let excedenteComBateriaAnual = 0;
+
+    const data = activeCenario.consumoMensal.map((consumo, i) => {
+      const autoconsumoDireto = activeCenario.autoconsumoMensal[i] ?? 0;
+      const excedenteSemBat = activeCenario.excessoMensal[i] ?? 0;
+      const peso = ganhoTotal > 0
+        ? (study.ganhoMensal[i] ?? 0) / ganhoTotal
+        : (excessoTotal > 0 ? excedenteSemBat / excessoTotal : 0);
+      const energiaArmazenada = Math.min(excedenteSemBat, Math.round(study.energiaArmazenadaAnual * peso));
+      const excedenteComBat = Math.max(0, excedenteSemBat - energiaArmazenada);
+      excedenteComBateriaAnual += excedenteComBat;
+      return {
+        mes: MONTH_LABELS[i],
+        autoconsumoDireto,
+        bateria: study.ganhoMensal[i] ?? 0,
+        excedenteComBat,
+        consumo,
+      };
+    });
+
+    return {
+      data,
+      excedenteComBateriaAnual,
+      autoconsumoComBateria: activeCenario.autoconsumoAnual + study.ganhoAnual,
+    };
+  }, [study, activeCenario]);
 
   // Derive night consumption per day for warnings (kWh/dia)
   const consumoNoturnoDiario = useMemo(() => {
@@ -558,6 +591,66 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
               <CardDescription>Impacto da bateria no autoconsumo e na energia armazenada</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {batteryChart && (
+                <div className="rounded-xl border bg-background p-4 space-y-4">
+                  <div>
+                    <p className="font-semibold text-sm">Produção Estimada vs Consumo Mensal — Com Bateria</p>
+                    <p className="text-xs text-muted-foreground">
+                      Autoconsumo direto + energia da bateria + excedente restante vs. consumo
+                    </p>
+                  </div>
+
+                  <ResponsiveContainer width="100%" height={260}>
+                    <ComposedChart data={batteryChart.data} margin={{ top: 10, right: 16, left: 0, bottom: 6 }}>
+                      <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip
+                        formatter={(value: number, name: string) => {
+                          const labels: Record<string, string> = {
+                            autoconsumoDireto: "Autoconsumo direto",
+                            bateria: "Bateria",
+                            excedenteComBat: "Excedente restante",
+                            consumo: "Consumo",
+                          };
+                          return [`${Math.round(value).toLocaleString("pt-PT")} kWh`, labels[name] ?? name];
+                        }}
+                        contentStyle={{ borderRadius: 10, border: "1px solid hsl(var(--border))" }}
+                      />
+                      <Legend
+                        wrapperStyle={{ fontSize: 12 }}
+                        formatter={(value) => {
+                          const labels: Record<string, string> = {
+                            autoconsumoDireto: "Autoconsumo direto",
+                            bateria: "Bateria",
+                            excedenteComBat: "Excedente restante",
+                            consumo: "Consumo",
+                          };
+                          return labels[String(value)] ?? String(value);
+                        }}
+                      />
+                      <Bar dataKey="autoconsumoDireto" stackId="pv" fill="#22c55e" radius={[0, 0, 0, 0]} name="autoconsumoDireto" />
+                      <Bar dataKey="bateria" stackId="pv" fill="#0ea5e9" radius={[0, 0, 0, 0]} name="bateria" />
+                      <Bar dataKey="excedenteComBat" stackId="pv" fill="#f59e0b" radius={[4, 4, 0, 0]} name="excedenteComBat" />
+                      <Line type="monotone" dataKey="consumo" stroke="hsl(var(--muted-foreground))" strokeWidth={1.7} strokeDasharray="4 2" dot={false} name="consumo" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "Produção anual", val: `${fmt(activeCenario!.energiaAnualEstimada)} kWh`, sub: "sistema FV" },
+                      { label: "Autoconsumo com bateria", val: `${study.autoconsumoPercComBat}%`, sub: `${fmt(batteryChart.autoconsumoComBateria)} kWh/ano` },
+                      { label: "Excedente restante", val: `${fmt(Math.round(batteryChart.excedenteComBateriaAnual))} kWh`, sub: `antes: ${fmt(activeCenario!.excessoAnual)} kWh` },
+                      { label: "Usado da bateria", val: `${fmt(study.ganhoAnual)} kWh`, sub: `${fmt(Math.round(study.energiaArmazenadaAnual))} kWh armazenados` },
+                    ].map((kpi) => (
+                      <div key={kpi.label} className="rounded-xl p-3 text-center border bg-muted/30">
+                        <p className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</p>
+                        <p className="font-bold text-sm mt-0.5">{kpi.val}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{kpi.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* Comparison table — energy only */}
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

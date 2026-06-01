@@ -577,6 +577,8 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
     equilibrado: 1.00,
     agressivo:   1.35,
   };
+  const pvgisProducaoLiquida = Boolean(sizing?.confianca?.pvgis);
+  const rendimentoCalculo = pvgisProducaoLiquida ? 1 : (sizing?.fatorRendimento ?? 1);
 
   // Recompute cenarios with the real panel Wp.
   // Monthly production scales proportionally to potenciaInstalada (linear).
@@ -593,7 +595,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       // Recompute minimum power for this scenario using the same formula as the server
       const potenciaMinima =
         (sizing.consumoAnualAjustado / 365 * (consumoData.coberturaMeta * mult / 100))
-        / (sizing.hsp * sizing.fatorRendimento);
+        / (sizing.hsp * rendimentoCalculo);
 
       const numPaineis = Math.ceil(potenciaMinima * 1000 / wpRef);
       const potenciaInstalada = Math.round(numPaineis * wpRef) / 1000;
@@ -633,7 +635,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sizing, wpRef, consumoData.coberturaMeta, consumoData.precoKwh, perfilDiurnoPct]);
+  }, [sizing, wpRef, consumoData.coberturaMeta, consumoData.precoKwh, perfilDiurnoPct, rendimentoCalculo]);
 
   // Currently selected sizing scenario (uses adjusted values)
   const activeCenario: AutoSizeCenario | null = useMemo(() => {
@@ -677,7 +679,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
         if (!wp || wp <= 0) return null;
         const quantidade = Math.ceil((sizing.potenciaMinima * 1000) / wp);
         const potInst = Math.round(quantidade * wp) / 1000;
-        const energiaAnual = Math.round(potInst * sizing.hsp * 365 * sizing.fatorRendimento);
+        const energiaAnual = Math.round(potInst * sizing.hsp * 365 * rendimentoCalculo);
         const coberturaReal =
           sizing.consumoAnualAjustado > 0
             ?Math.min(100, Math.round((energiaAnual / sizing.consumoAnualAjustado) * 100))
@@ -693,13 +695,14 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       })
       .filter((c): c is CenarioCatalogoPainel => c !== null)
       .sort((a, b) => a.potenciaWp - b.potenciaWp);
-  }, [sizing, panels]);
+  }, [sizing, panels, rendimentoCalculo]);
 
   // Effective sizing: active scenario base + manual overrides
   const effectiveSizing = useMemo(() => {
     if (!sizing || !manual) return sizing;
     const potenciaInstalada = +(manual.numPaineis * manual.potenciaWp / 1000).toFixed(2);
-    const energiaAnualEstimada = Math.round(potenciaInstalada * manual.hsp * 365 * manual.rendimento);
+    const rendimentoManual = pvgisProducaoLiquida ? 1 : manual.rendimento;
+    const energiaAnualEstimada = Math.round(potenciaInstalada * manual.hsp * 365 * rendimentoManual);
     const coberturaReal = sizing.consumoAnualAjustado > 0
       ?Math.round((energiaAnualEstimada / sizing.consumoAnualAjustado) * 100)
       : 0;
@@ -715,7 +718,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       hsp: manual.hsp,
       fatorRendimento: manual.rendimento,
     };
-  }, [sizing, manual]);
+  }, [sizing, manual, pvgisProducaoLiquida]);
 
   // —— Financial projections for orçamento estudo —————————————————————————————
   const PRECO_INJECAO_ORC = 0.06;
@@ -816,7 +819,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
     if (!isManualModified || !manual || !sizing) return activeCenario;
     const potenciaInstalada = +(manual.numPaineis * manual.potenciaWp / 1000).toFixed(2);
     const hspScale   = sizing.hsp > 0 ?manual.hsp / sizing.hsp : 1;
-    const rendScale  = sizing.fatorRendimento > 0 ?manual.rendimento / sizing.fatorRendimento : 1;
+    const rendScale  = pvgisProducaoLiquida ? 1 : (sizing.fatorRendimento > 0 ?manual.rendimento / sizing.fatorRendimento : 1);
     const scale      = activeCenario.potenciaInstalada > 0 ?potenciaInstalada / activeCenario.potenciaInstalada : 1;
     const producaoMensal = activeCenario.producaoMensal.map(v => Math.round(v * scale * hspScale * rendScale));
     const consumoMensal  = activeCenario.consumoMensal;
@@ -839,7 +842,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       coberturaReal,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCenario, isManualModified, manual, sizing, perfilDiurnoPct]);
+  }, [activeCenario, isManualModified, manual, sizing, perfilDiurnoPct, pvgisProducaoLiquida]);
 
   const financialCenario = useMemo<AutoSizeCenario | null>(() => {
     if (!chartCenario) return null;
@@ -1400,7 +1403,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                           if (sizing && !showManualAdjust) {
                             const tipo = selectedCenarioTipo;
                             const mult = CENARIO_COB_MULT[tipo] ??1.0;
-                            const pm = (sizing.consumoAnualAjustado / 365 * (consumoData.coberturaMeta * mult / 100)) / (sizing.hsp * sizing.fatorRendimento);
+                            const pm = (sizing.consumoAnualAjustado / 365 * (consumoData.coberturaMeta * mult / 100)) / (sizing.hsp * rendimentoCalculo);
                             const panel = panels.find(p => p.id === id);
                             const wp = panel ?Number(panel.potencia) : 400;
                             const np = Math.ceil(pm * 1000 / wp);
@@ -1628,7 +1631,16 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                         { label: "1. Consumo diário",                        formula: `${sizing.consumoAnualAjustado.toLocaleString("pt-PT")} kWh/ano ÷ 365 dias`,                                     result: `${sizing.consumoDiario} kWh/dia`,             hi: false },
                         { label: "2. Energia solar diária alvo",             formula: `${sizing.consumoDiario} kWh/dia × ${consumoData.coberturaMeta}% cobertura`,                                     result: `${sizing.energiaAlvoDiaria} kWh/dia`,        hi: false },
                         { label: "3. Poténcia bruta (sem perdas)",           formula: `${sizing.energiaAlvoDiaria} kWh/dia ÷ ${sizing.hsp} h/dia (HSP)`,                                              result: `${sizing.potenciaBruta} kWp`,                hi: false },
-                        { label: `4. Potência mínima teórica (perdas ${(sizing.margemPerdas*100).toFixed(0)}%)`, formula: `${sizing.potenciaBruta} kWp ÷ ${sizing.fatorRendimento.toFixed(2)} (rendimento)`, result: `${sizing.potenciaMinima} kWp`, hi: false },
+                        {
+                          label: pvgisProducaoLiquida
+                            ? "4. Potência mínima teórica (PVGIS líquido)"
+                            : `4. Potência mínima teórica (perdas ${(sizing.margemPerdas*100).toFixed(0)}%)`,
+                          formula: pvgisProducaoLiquida
+                            ? `${sizing.potenciaBruta} kWp (perdas já incluídas no PVGIS)`
+                            : `${sizing.potenciaBruta} kWp ÷ ${sizing.fatorRendimento.toFixed(2)} (rendimento)`,
+                          result: `${sizing.potenciaMinima} kWp`,
+                          hi: false
+                        },
                         { label: `5. Arredondamento → painéis reais`,        formula: `⌈${sizing.potenciaMinima} kWp ÷ ${(wpRef/1000).toFixed(3)} kWp/painel⌉ = ${(activeCenario ??sizing).numPaineis} × ${wpRef} Wp`,                              result: `${(activeCenario ??sizing).potenciaInstalada} kWp instalados`, hi: true  },
                         { label: "6. Cobertura real após arredondamento",    formula: `${sizing.energiaAnualEstimada.toLocaleString("pt-PT")} kWh ÷ ${sizing.consumoAnualAjustado.toLocaleString("pt-PT")} kWh`, result: `${sizing.coberturaReal}%`,           hi: true  },
                       ].map(({ label, formula, result, hi }) => (
@@ -1851,14 +1863,15 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                       {/* Comparison table + warnings */}
                       {(() => {
                         const mPotInstalada = +(manual.numPaineis * manual.potenciaWp / 1000).toFixed(2);
-                        const mEnergiaAnual = Math.round(mPotInstalada * manual.hsp * 365 * manual.rendimento);
+                        const rendimentoManual = pvgisProducaoLiquida ? 1 : manual.rendimento;
+                        const mEnergiaAnual = Math.round(mPotInstalada * manual.hsp * 365 * rendimentoManual);
                         const mCobertura = sizing.consumoAnualAjustado > 0
                           ?Math.round((mEnergiaAnual / sizing.consumoAnualAjustado) * 100) : 0;
                         const mExcedente = Math.max(0, mEnergiaAnual - sizing.consumoAnualAjustado);
                         const abaixoMeta = mCobertura < manual.coberturaMeta;
                         const acimaExcesso = mCobertura > manual.coberturaMeta * 1.3;
                         const pNeeded = abaixoMeta
-                          ?Math.ceil(((manual.coberturaMeta / 100 * sizing.consumoAnualAjustado) / (manual.hsp * 365 * manual.rendimento) - mPotInstalada) * 1000 / manual.potenciaWp)
+                          ?Math.ceil(((manual.coberturaMeta / 100 * sizing.consumoAnualAjustado) / (manual.hsp * 365 * rendimentoManual) - mPotInstalada) * 1000 / manual.potenciaWp)
                           : 0;
                         const rows = [
                           { label: "Potência Instalada", auto: `${sizing.potenciaInstalada} kWp`,                                       adj: `${mPotInstalada} kWp`,                                   d: mPotInstalada - sizing.potenciaInstalada,           fmt: (v: number) => `${v > 0 ?"+" : ""}${v.toFixed(2)} kWp` },
