@@ -1689,28 +1689,19 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                       <div className="grid grid-cols-3 gap-3">
                         <div className="flex flex-col gap-0.5">
                           <p className="text-[10px] text-muted-foreground">
-                            {sizing.confianca?.pvgis ? "HSP PVGIS bruto" : "Média anual"}
+                            {sizing.confianca?.pvgis ? "HSP PVGIS usado" : "Média anual"}
                           </p>
-                          <p className="font-bold text-base">
-                            {sizing.confianca?.pvgis
-                              ? (sizing.fatorRendimento > 0 ? (sizing.hsp / sizing.fatorRendimento).toFixed(2) : sizing.hsp)
-                              : sizing.hsp} h/dia
-                          </p>
+                          <p className="font-bold text-base">{sizing.hsp} h/dia</p>
                           {sizing.confianca?.pvgis && (
-                            <p className="text-[10px] text-muted-foreground">sem perdas</p>
+                            <p className="text-[10px] text-muted-foreground">com perdas PVGIS</p>
                           )}
                         </div>
                         {sizing.hspMin !== undefined && (
                           <div className="flex flex-col gap-0.5">
                             <p className="text-[10px] text-muted-foreground">
-                              {sizing.confianca?.pvgis ? "HSP líquido usado" : "Mínima mensal"}
+                              {sizing.confianca?.pvgis ? "Mínima mensal" : "Mínima mensal"}
                             </p>
-                            <p className="font-semibold text-sm text-blue-600 dark:text-blue-400">
-                              {sizing.confianca?.pvgis ? sizing.hsp : sizing.hspMin} h/dia
-                            </p>
-                            {sizing.confianca?.pvgis && (
-                              <p className="text-[10px] text-muted-foreground">com perdas</p>
-                            )}
+                            <p className="font-semibold text-sm text-blue-600 dark:text-blue-400">{sizing.hspMin} h/dia</p>
                           </div>
                         )}
                         {sizing.hspMax !== undefined && (
