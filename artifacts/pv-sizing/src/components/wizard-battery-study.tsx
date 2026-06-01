@@ -252,6 +252,20 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
     return calcBatteryStudy(sys, activeCenario, perfilDiurnoPct, precoKwh, tariff);
   }, [sys, activeCenario, perfilDiurnoPct, precoKwh, tariff?.percVazio, tariff?.percCheio, tariff?.percPonta]);
 
+  const previousStudy = useMemo(() => {
+    if (!activeCenario || batteryUnits.length === 0) return null;
+    const units = batteryUnits
+      .map((unit) => ({ ...unit }))
+      .filter((unit) => unit.qty > 0);
+    const lastIdx = units.length - 1;
+    if (lastIdx < 0) return null;
+    units[lastIdx].qty -= 1;
+    const previousUnits = units.filter((unit) => unit.qty > 0);
+    const previousSys = calcBatterySystem(previousUnits, batteries);
+    if (!previousSys) return null;
+    return calcBatteryStudy(previousSys, activeCenario, perfilDiurnoPct, precoKwh, tariff);
+  }, [activeCenario, batteryUnits, batteries, perfilDiurnoPct, precoKwh, tariff?.percVazio, tariff?.percCheio, tariff?.percPonta]);
+
   const batteryChart = useMemo(() => {
     if (!study || !activeCenario) return null;
     const data = activeCenario.consumoMensal.map((consumo, i) => {
@@ -293,8 +307,9 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
   // Battery warnings
   const warnings = useMemo(() => {
     if (!study || !sys) return [];
+    const investimentoTotal = precoBateria !== null ? precoBateria * sys.totalUnits : null;
     const payback = precoBateriaValido && precoBateria !== null && study.poupancaAdicional > 0
-      ? precoBateria / study.poupancaAdicional
+      ? (investimentoTotal ?? precoBateria) / study.poupancaAdicional
       : null;
     return deriveBatteryWarnings({
       utilCap: sys.utilCap,
@@ -703,13 +718,13 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                 <Euro size={18} className="text-primary" />
                 Análise Financeira da Bateria
               </CardTitle>
-              <CardDescription>Disponível após definição do custo total da bateria</CardDescription>
+              <CardDescription>Disponível após definição do custo unitário da bateria</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Price input */}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                  Preço total da bateria (€) — fornecido pelo instalador ou catálogo
+                  Preço unitário da bateria (€) — fornecido pelo instalador ou catálogo
                 </label>
                 <div className="flex items-center gap-2 max-w-xs">
                   <Input
@@ -724,7 +739,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                   <span className="text-sm text-muted-foreground shrink-0">€</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-1.5">
-                  Inclua instalação e acessórios. Pode ser preço unitário × quantidade.
+                  Inclua instalação e acessórios por unidade. O investimento total é calculado pela quantidade selecionada.
                 </p>
               </div>
 
@@ -732,8 +747,13 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
 
               {/* Financial KPIs — only when price is defined */}
               {precoBateriaValido && precoBateria !== null ? (() => {
+                const investimentoTotal = Math.round(precoBateria * (sys?.totalUnits ?? 1));
+                const ganhoMarginal = previousStudy
+                  ? Math.max(0, study.ganhoAnual - previousStudy.ganhoAnual)
+                  : study.ganhoAnual;
+                const poupancaMarginal = Math.round(ganhoMarginal * precoKwh);
                 const payback = study.poupancaAdicional > 0
-                  ? Math.round(precoBateria / study.poupancaAdicional * 10) / 10
+                  ? Math.round(investimentoTotal / study.poupancaAdicional * 10) / 10
                   : null;
                 const paybackBom = payback !== null && payback <= 12;
                 return (
@@ -742,8 +762,8 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                       {[
                         {
                           label: "Investimento bateria",
-                          val: `${fmt(Math.round(precoBateria))} €`,
-                          sub: `definido pelo utilizador`,
+                          val: `${fmt(investimentoTotal)} €`,
+                          sub: `${fmt(Math.round(precoBateria))} € × ${sys?.totalUnits ?? 1} un.`,
                           hi: false,
                         },
                         {
@@ -766,6 +786,21 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                         </div>
                       ))}
                     </div>
+
+                    {previousStudy && sys && sys.totalUnits > 1 && (
+                      <div className={cn(
+                        "rounded-lg border p-3 text-xs",
+                        ganhoMarginal > 100
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-800 dark:text-emerald-300"
+                          : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-300"
+                      )}>
+                        <strong>Ganho da última bateria:</strong>{" "}
+                        {fmt(Math.round(ganhoMarginal))} kWh/ano ({fmt(poupancaMarginal)} €/ano).
+                        {ganhoMarginal <= 100 && (
+                          <> A bateria anterior já absorve quase todo o excedente útil ou o consumo noturno disponível.</>
+                        )}
+                      </div>
+                    )}
 
                     {payback !== null && payback > 15 && (
                       <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
