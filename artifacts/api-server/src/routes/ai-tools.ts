@@ -190,7 +190,7 @@ async function fetchPvgisMonthlyKwhPerKwp(
   // azimute 0 = South (from-South convention, same as PVGIS aspect)
   const url =
     `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?` +
-    `lat=${lat}&lon=${lon}&peakpower=1&loss=14` +
+    `lat=${lat}&lon=${lon}&peakpower=1&loss=0` +
     `&angle=${inclinacao}&aspect=${azimute}` +
     `&outputformat=json&mountingplace=building`;
 
@@ -220,7 +220,7 @@ async function fetchPvgisMonthlyKwhPerKwp(
 
   const monthly = data.outputs?.monthly?.fixed;
   if (!monthly || monthly.length !== 12) return null;
-  // Return monthly kWh per kWp (PVGIS loss=14 already applied)
+  // Return gross monthly kWh per kWp. The app applies its global yield/loss factor once.
   return monthly.map(e => e.E_m);
 }
 
@@ -319,7 +319,7 @@ interface CenarioParams {
   capacidadeBateriaBase: number | null;
   custoBateria: number;
   // Enhanced engine fields
-  pvgisMonthlyKwhPerKwp?: number[];  // 12 values from PVGIS (loss=14 already applied)
+  pvgisMonthlyKwhPerKwp?: number[];  // 12 gross values from PVGIS (loss=0)
   consumoMensalInput?: number[];     // 12 values from invoice data
   perfilDiurnoPct: number;           // daytime consumption % for hourly simulation
 }
@@ -337,7 +337,7 @@ function buildCenario(p: CenarioParams) {
   // Monthly production: use PVGIS real data if available, else HSP formula
   const fonteProducao: "pvgis" | "estimativa_hsp" = p.pvgisMonthlyKwhPerKwp ? "pvgis" : "estimativa_hsp";
   const producaoMensal = p.pvgisMonthlyKwhPerKwp
-    ? p.pvgisMonthlyKwhPerKwp.map(v => Math.round(v * potenciaInstalada))
+    ? p.pvgisMonthlyKwhPerKwp.map(v => Math.round(v * potenciaInstalada * p.fatorRendimento))
     : PT_MONTHLY_FACTORS.map((factor, m) =>
         Math.round(potenciaInstalada * p.hsp * factor * DAYS_PER_MONTH[m] * p.fatorRendimento),
       );
