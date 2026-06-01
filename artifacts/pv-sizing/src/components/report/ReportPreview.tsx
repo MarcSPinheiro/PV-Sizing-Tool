@@ -1,5 +1,9 @@
 import type { Battery, Inverter, SolarPanel } from "@workspace/api-client-react";
-import type { BatteryUnit } from "@/components/wizard-battery-study";
+import {
+  calcBatteryStudy,
+  calcBatterySystem,
+  type BatteryUnit,
+} from "@/components/wizard-battery-study";
 import type { MapReportData } from "@/components/wizard-map-step";
 import { createPanelLayout, type MapArea } from "@/components/satellite-map";
 import type { InverterUnit } from "@/lib/multi-inverter";
@@ -262,6 +266,95 @@ function SvgBarChart({
       <g transform={`translate(${left}, ${height - 4})`}>
         <rect width="12" height="4" y="-8" fill={color} rx="2" />
         <text x="18" y="-4" fontSize="11" fill="#334155">{label}</text>
+      </g>
+    </svg>
+  );
+}
+
+function SvgBatteryStackedChart({
+  data,
+}: {
+  data: Array<{
+    month: string;
+    autoconsumoDireto: number;
+    cargaBateria: number;
+    excedenteRestante: number;
+    consumo: number;
+  }>;
+}) {
+  const width = 760;
+  const height = 270;
+  const left = 52;
+  const right = 24;
+  const top = 18;
+  const bottom = 54;
+  const maxStack = Math.max(
+    1,
+    ...data.map((item) => item.autoconsumoDireto + item.cargaBateria + item.excedenteRestante),
+    ...data.map((item) => item.consumo),
+  ) * 1.12;
+  const slot = (width - left - right) / data.length;
+  const barWidth = slot * 0.58;
+  const y = (value: number) => top + (height - top - bottom) * (1 - value / maxStack);
+  const barH = (value: number) => (height - top - bottom) * (value / maxStack);
+  const linePoints = data
+    .map((item, index) => {
+      const x = left + index * slot + slot / 2;
+      return `${x},${y(item.consumo)}`;
+    })
+    .join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full rounded-lg border bg-white">
+      {[0, 0.5, 1].map((tick) => {
+        const yy = y(maxStack * tick);
+        return (
+          <g key={tick}>
+            <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="#e2e8f0" />
+            <text x={left - 8} y={yy + 4} textAnchor="end" fontSize="10" fill="#64748b">
+              {Math.round(maxStack * tick).toLocaleString("pt-PT")}
+            </text>
+          </g>
+        );
+      })}
+      {data.map((item, index) => {
+        const x = left + index * slot + (slot - barWidth) / 2;
+        let cursor = height - bottom;
+        const directH = barH(item.autoconsumoDireto);
+        const batteryH = barH(item.cargaBateria);
+        const exportH = barH(item.excedenteRestante);
+        cursor -= directH;
+        const directY = cursor;
+        cursor -= batteryH;
+        const batteryY = cursor;
+        cursor -= exportH;
+        const exportY = cursor;
+        return (
+          <g key={item.month}>
+            <rect x={x} y={directY} width={barWidth} height={Math.max(0, directH)} fill="#22c55e" />
+            <rect x={x} y={batteryY} width={barWidth} height={Math.max(0, batteryH)} fill="#0ea5e9" />
+            <rect x={x} y={exportY} width={barWidth} height={Math.max(0, exportH)} rx="3" fill="#f59e0b" />
+            <text x={x + barWidth / 2} y={height - 18} textAnchor="middle" fontSize="11" fill="#475569">{item.month}</text>
+          </g>
+        );
+      })}
+      <polyline points={linePoints} fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="5 3" />
+      {data.map((item, index) => {
+        const x = left + index * slot + slot / 2;
+        return <circle key={item.month} cx={x} cy={y(item.consumo)} r="3" fill="#64748b" />;
+      })}
+      <g transform={`translate(${left}, ${height - 5})`}>
+        {[
+          ["#22c55e", "Autoconsumo direto"],
+          ["#0ea5e9", "Carga bateria"],
+          ["#f59e0b", "Excedente restante"],
+          ["#64748b", "Consumo"],
+        ].map(([color, label], index) => (
+          <g key={label} transform={`translate(${index * 170}, 0)`}>
+            <rect width="12" height="6" y="-10" fill={color} rx="2" />
+            <text x="18" y="-4" fontSize="11" fill="#334155">{label}</text>
+          </g>
+        ))}
       </g>
     </svg>
   );
@@ -790,6 +883,11 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     num(sizing.potenciaInstalada) ??
     (panelCount && panelPower ? (panelCount * panelPower) / 1000 : null);
   const annualEnergy = num(sizing.energiaAnualEstimada) ?? num(activeScenario?.energiaAnualEstimada);
+  const annualConsumption =
+    num(sizing.consumoAnualAjustado) ??
+    num(consumo.consumoAnual) ??
+    (num(consumo.consumoMensal) ? Number(consumo.consumoMensal) * 12 : null);
+  const energyPrice = num(consumo.precoKwh ?? consumo.tarifaEnergia) ?? 0.18;
   const monthlyProduction = monthlyArray(
     sizing.producaoMensal ?? activeScenario?.producaoMensal,
     annualEnergy,
@@ -806,15 +904,49 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     producao: monthlyProduction[index] ?? 0,
     consumo: monthlyConsumption[index] ?? 0,
   }));
+  const batterySystem = calcBatterySystem(batteryUnits, batteries);
+  const batteryBaseScenario = activeScenario
+    ?{
+        excessoMensal: monthlyArray(activeScenario.excessoMensal, activeScenario.excessoAnual),
+        excessoAnual: num(activeScenario.excessoAnual) ??0,
+        autoconsumoMensal: monthlyArray(activeScenario.autoconsumoMensal, activeScenario.autoconsumoAnual),
+        consumoMensal: monthlyArray(activeScenario.consumoMensal, annualConsumption, true),
+        autoconsumoAnual: num(activeScenario.autoconsumoAnual) ??0,
+        energiaAnualEstimada: num(activeScenario.energiaAnualEstimada) ??0,
+        capacidadeBateriaRecomendada: num(activeScenario.capacidadeBateriaRecomendada),
+        poupancaAnual: num(activeScenario.poupancaAnual) ??0,
+        investimentoEstimado: num(activeScenario.investimentoEstimado) ??0,
+      }
+    : null;
+  const batteryStudy = batterySystem && batteryBaseScenario
+    ?calcBatteryStudy(
+        batterySystem,
+        batteryBaseScenario,
+        num(consumo.perfilDiurnoPct) ??50,
+        energyPrice,
+        {
+          percVazio: num(sizing.percVazio ??consumo.percVazio) ??0,
+          percCheio: num(sizing.percCheio ??consumo.percCheio) ??0,
+          percPonta: num(sizing.percPonta ??consumo.percPonta) ??0,
+        },
+      )
+    : null;
+  const batteryChartData = batteryStudy && batteryBaseScenario
+    ?MONTHS.map((month, index) => ({
+        month,
+        autoconsumoDireto: batteryBaseScenario.autoconsumoMensal[index] ??0,
+        cargaBateria: batteryStudy.armazenadoMensal[index] ??0,
+        excedenteRestante: batteryStudy.excedenteRestanteMensal[index] ??0,
+        consumo: batteryBaseScenario.consumoMensal[index] ??0,
+      }))
+    : [];
+  const batteryExportRemaining = batteryStudy
+    ?batteryStudy.excedenteRestanteMensal.reduce((sum, value) => sum + value, 0)
+    : null;
   const annualSavings =
     num(sizing.poupancaAnual) ??
     num(activeScenario?.poupancaAnual) ??
     num(orcamento.poupancaAnual);
-  const annualConsumption =
-    num(sizing.consumoAnualAjustado) ??
-    num(consumo.consumoAnual) ??
-    (num(consumo.consumoMensal) ? Number(consumo.consumoMensal) * 12 : null);
-  const energyPrice = num(consumo.precoKwh ?? consumo.tarifaEnergia) ?? 0.18;
   const currentBill = annualConsumption ? annualConsumption * energyPrice : null;
   const investment =
     num(draft?.investimentoManual) ??
@@ -1184,6 +1316,48 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
                 ]}
               />
             </div>
+            {batteryStudy && batteryChartData.length > 0 && (
+              <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <h3 className="mb-1 text-sm font-bold text-slate-700">Impacto da bateria na poupança</h3>
+                <p className="mb-3 text-xs text-slate-500">
+                  O excedente carrega primeiro a bateria; apenas o excedente restante é injetado na rede.
+                </p>
+                <SvgBatteryStackedChart data={batteryChartData} />
+                <div className="mt-4 grid grid-cols-4 gap-3">
+                  <Metric label="Autoconsumo com bateria" value={`${fmt(batteryStudy.autoconsumoPercComBat, 0, "%")} / ${int(batteryStudy.autoconsumoComBat, "kWh")}`} />
+                  <Metric label="Carga anual bateria" value={int(batteryStudy.energiaArmazenadaAnual, "kWh")} />
+                  <Metric label="Excedente restante" value={int(batteryExportRemaining, "kWh")} />
+                  <Metric label="Poupança adicional" value={money(batteryStudy.poupancaAdicional)} />
+                </div>
+                <div className="mt-3 overflow-hidden rounded-lg border bg-white">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-950 text-white">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Indicador</th>
+                        <th className="px-3 py-2 text-right">Sem bateria</th>
+                        <th className="px-3 py-2 text-right">Com bateria</th>
+                        <th className="px-3 py-2 text-right">Ganho</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ["Autoconsumo anual", int(batteryBaseScenario?.autoconsumoAnual, "kWh"), int(batteryStudy.autoconsumoComBat, "kWh"), `+${int(batteryStudy.ganhoAnual, "kWh")}`],
+                        ["Taxa de autoconsumo", fmt(batteryStudy.autoconsumoPercSemBat, 0, "%"), fmt(batteryStudy.autoconsumoPercComBat, 0, "%"), `+${batteryStudy.autoconsumoPercComBat - batteryStudy.autoconsumoPercSemBat} pp`],
+                        ["Energia entregue/dia", "-", fmt(batteryStudy.energiaEntregue, 1, "kWh"), int(batteryStudy.energiaEntregueAnual, "kWh/ano")],
+                        ["Poupança adicional", "-", money(batteryStudy.poupancaAdicional), money(batteryStudy.poupancaAdicional)],
+                      ].map(([label, sem, com, ganho], index) => (
+                        <tr key={label} className={index % 2 ?"bg-slate-50" : "bg-white"}>
+                          <td className="px-3 py-2 font-semibold">{label}</td>
+                          <td className="px-3 py-2 text-right">{sem}</td>
+                          <td className="px-3 py-2 text-right">{com}</td>
+                          <td className="px-3 py-2 text-right font-semibold text-green-600">{ganho}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
             <div className="mt-6">
               <h3 className="mb-4 text-base font-bold text-slate-950">Rentabilidade do Investimento</h3>
               <div className="mb-5 grid grid-cols-4 gap-3">
