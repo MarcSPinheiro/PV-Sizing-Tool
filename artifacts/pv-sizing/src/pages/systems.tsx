@@ -64,13 +64,13 @@ export default function Systems() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sistemas PV</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Sistemas PV</h1>
           <p className="text-muted-foreground mt-1">Gira os dimensionamentos efetuados.</p>
         </div>
         <Link href="/sistemas/novo">
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Novo Dimensionamento
           </Button>
@@ -78,7 +78,7 @@ export default function Systems() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar por cliente..."
@@ -89,8 +89,8 @@ export default function Systems() {
         </div>
       </div>
 
-      <div className="border rounded-md bg-card">
-        <Table>
+      <div className="overflow-x-auto border rounded-md bg-card">
+        <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>

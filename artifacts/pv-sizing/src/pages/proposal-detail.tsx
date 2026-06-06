@@ -54,11 +54,11 @@ export function ProposalDetail({ id, onBack }: Props) {
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft size={18} /></Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{proposal.titulo}</h1>
-            <div className="flex items-center gap-2 mt-1">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold tracking-tight break-words sm:text-2xl">{proposal.titulo}</h1>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge variant={st.variant}>{st.label}</Badge>
               <span className="text-sm text-muted-foreground flex items-center gap-1">
                 <Calendar size={12} />
@@ -67,13 +67,13 @@ export function ProposalDetail({ id, onBack }: Props) {
             </div>
           </div>
         </div>
-        <Button onClick={handlePrint} variant="outline">
+        <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
           <Download size={16} className="mr-2" /> Exportar / Imprimir
         </Button>
       </div>
 
       {/* Main content */}
-      <div ref={printRef}>
+      <div ref={printRef} className="overflow-x-auto">
         <ProposalPDF proposal={proposal} panel={panel} inverter={inverter} battery={battery} />
       </div>
     </div>

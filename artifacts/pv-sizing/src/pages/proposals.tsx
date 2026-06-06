@@ -52,10 +52,10 @@ export default function Proposals() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Propostas Técnicas</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Propostas Técnicas</h1>
           <p className="text-muted-foreground mt-1">Gerir e exportar propostas de sistemas solares.</p>
         </div>
-        <Button onClick={() => navigate("/dimensionamento")} className="shrink-0">
+        <Button onClick={() => navigate("/dimensionamento")} className="w-full shrink-0 sm:w-auto">
           <Wand2 size={16} className="mr-2" />
           Nova Proposta (Wizard)
         </Button>
@@ -73,7 +73,8 @@ export default function Proposals() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-[820px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
@@ -134,7 +135,8 @@ export default function Proposals() {
                 })
               )}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

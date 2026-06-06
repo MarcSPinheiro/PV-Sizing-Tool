@@ -40,8 +40,8 @@ export default function CustomerDetail() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">{customer.nome}</h1>
-          <div className="flex items-center gap-2 mt-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{customer.nome}</h1>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             <Badge variant={customer.tipoCliente === "Residencial" ?"default" : customer.tipoCliente === "Comercial" ?"secondary" : "outline"}>
               {customer.tipoCliente}
             </Badge>
@@ -49,7 +49,7 @@ export default function CustomerDetail() {
           </div>
         </div>
         <Link href={`/sistemas/novo?customerId=${customer.id}`}>
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Zap className="mr-2 h-4 w-4" />
             Novo Sistema PV
           </Button>
@@ -57,7 +57,7 @@ export default function CustomerDetail() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-2">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -65,11 +65,11 @@ export default function CustomerDetail() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-              <div className="space-y-1">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+              <div className="space-y-1 min-w-0">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5"><MapPin className="h-4 w-4" /> Morada</span>
-                <p className="font-medium">{customer.morada}</p>
-                <p className="text-xs text-muted-foreground font-mono">{customer.latitude}, {customer.longitude}</p>
+                <p className="font-medium break-words">{customer.morada}</p>
+                <p className="text-xs text-muted-foreground font-mono break-all">{customer.latitude}, {customer.longitude}</p>
               </div>
               <div className="space-y-1">
                 <span className="text-sm text-muted-foreground flex items-center gap-1.5"><Euro className="h-4 w-4" /> Preço Eletricidade</span>
@@ -117,11 +117,11 @@ export default function CustomerDetail() {
                 {customerSystems.map((sys) => (
                   <Link key={sys.id} href={`/sistemas/${sys.id}`}>
                     <div className="p-3 border rounded-lg hover:border-primary transition-colors cursor-pointer group">
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-wrap justify-between items-center gap-2">
                         <span className="font-medium group-hover:text-primary transition-colors">Sistema #{sys.id}</span>
                         <Badge variant="outline">{sys.numPaineis} painéis</Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-2 flex justify-between">
+                      <div className="text-xs text-muted-foreground mt-2 flex flex-col gap-1 sm:flex-row sm:justify-between">
                         <span>Tilt: {sys.inclinacao}° | Az: {sys.azimute}°</span>
                         <span>{format(new Date(sys.createdAt), "dd/MM/yyyy")}</span>
                       </div>

@@ -194,7 +194,7 @@ export default function SystemDetail() {
         </Button>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">Sistema #{system.id}</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Sistema #{system.id}</h1>
             {compatibility?.estado === "Válido" ? (
               <Badge className="bg-emerald-500 hover:bg-emerald-600">Válido</Badge>
             ) : compatibility?.estado === "Inválido" ? (
@@ -208,7 +208,7 @@ export default function SystemDetail() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-3">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="production">Produção PVGIS</TabsTrigger>
           <TabsTrigger value="financial">Análise Financeira</TabsTrigger>
@@ -337,7 +337,7 @@ export default function SystemDetail() {
                       </FormItem>
                     )} />
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <FormField control={form.control} name="consumoDiario" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Consumo Diário (kWh)</FormLabel>
@@ -388,7 +388,7 @@ export default function SystemDetail() {
                         )} />
                       )}
                       {watchedTarifa === "bi-horaria" && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <FormField control={form.control} name="precoForaVazio" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-xs">Fora de Vazio</FormLabel>
@@ -404,7 +404,7 @@ export default function SystemDetail() {
                         </div>
                       )}
                       {(watchedTarifa === "tri-horaria" || watchedTarifa === "tetra-horaria") && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <FormField control={form.control} name="precoPonta" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-xs">Ponta</FormLabel>
@@ -452,7 +452,7 @@ export default function SystemDetail() {
                       </FormItem>
                     )} />
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <FormField control={form.control} name="escaladaEnergia" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Escalada Anual (%)</FormLabel>
@@ -483,8 +483,8 @@ export default function SystemDetail() {
               {fin ? (
                 <>
                   {/* KPI Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <Card className="col-span-2 sm:col-span-3 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <Card className="sm:col-span-2 xl:col-span-3 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                       <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap">
                         <div className="text-center flex-1">
                           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Payback</p>

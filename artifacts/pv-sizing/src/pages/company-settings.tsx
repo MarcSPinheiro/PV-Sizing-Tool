@@ -93,7 +93,7 @@ export default function CompanySettingsPage() {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5"><Label>Cor primária</Label>
                 <div className="flex gap-2 items-center">
                   <Input type="color" className="w-16 h-10 p-1" value={form.corPrimaria}
@@ -133,7 +133,7 @@ export default function CompanySettingsPage() {
                 Guardada apenas neste navegador. Será usada para analisar faturas e fichas técnicas com IA.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button type="button" variant="outline" onClick={() => {
                 setStoredAnthropicKey(anthropicKey);
                 toast({ title: anthropicKey.trim() ?"Chave de IA guardada" : "Chave de IA removida" });
@@ -150,7 +150,7 @@ export default function CompanySettingsPage() {
             </div>
           </CardContent>
         </Card>
-        <Button type="submit" disabled={saving}>{saving ?"A guardar…" : "Guardar alterações"}</Button>
+        <Button type="submit" disabled={saving} className="w-full sm:w-auto">{saving ?"A guardar…" : "Guardar alterações"}</Button>
       </form>
     </div>
   );

@@ -106,7 +106,7 @@ export default function StringSizing() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Calculadora de Strings</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Calculadora de Strings</h1>
         <p className="text-muted-foreground mt-1">
           Dimensionamento de strings fotovoltaicas com análise térmica e verificação de limites MPPT
         </p>
@@ -166,7 +166,7 @@ export default function StringSizing() {
                     Especificações do Módulo
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-3">
+                <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <FormField control={form.control} name="voc" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Voc (V)</FormLabel>
@@ -235,7 +235,7 @@ export default function StringSizing() {
                     Especificações do Inversor
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-3">
+                <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <FormField control={form.control} name="vmpptMin" render={({ field }) => (
                     <FormItem>
                       <FormLabel>MPPT Vmin (V)</FormLabel>
@@ -265,7 +265,7 @@ export default function StringSizing() {
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="ipviscMax" render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem className="sm:col-span-2">
                       <FormLabel>I PVIsc Máx (A)</FormLabel>
                       <FormControl><Input type="number" step="0.1" placeholder="18.5" {...field} /></FormControl>
                       <FormMessage />
@@ -287,7 +287,7 @@ export default function StringSizing() {
           {result ? (
             <>
               {/* Summary cards */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Card className="bg-blue-50 border-blue-200">
                   <CardContent className="p-4 text-center">
                     <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">Mínimo Arranque</p>

@@ -122,7 +122,7 @@ export default function SystemNew() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Novo Dimensionamento</h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Novo Dimensionamento</h1>
             <p className="text-muted-foreground mt-1">Configure os parâmetros do sistema fotovoltaico.</p>
           </div>
         </div>
@@ -251,7 +251,7 @@ export default function SystemNew() {
                   <CardTitle className="text-lg">Configuração Elétrica</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <FormField control={form.control} name="numPaineis" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Total Painéis</FormLabel>
@@ -287,7 +287,7 @@ export default function SystemNew() {
                     </p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
                     <FormField control={form.control} name="inclinacao" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Inclinação (°)</FormLabel>
@@ -311,9 +311,9 @@ export default function SystemNew() {
                 </CardContent>
               </Card>
 
-              <div className="flex justify-end gap-4">
-                <Button variant="outline" type="button" onClick={() => window.history.back()}>Cancelar</Button>
-                <Button type="submit" disabled={createSystem.isPending}>
+              <div className="flex flex-col justify-end gap-3 sm:flex-row">
+                <Button variant="outline" type="button" onClick={() => window.history.back()} className="w-full sm:w-auto">Cancelar</Button>
+                <Button type="submit" disabled={createSystem.isPending} className="w-full sm:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   {createSystem.isPending ?"A guardar..." : "Guardar e Calcular"}
                 </Button>
