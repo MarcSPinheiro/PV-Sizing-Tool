@@ -590,62 +590,64 @@ export default function WizardMapStep({
           </div>
         </aside>
 
-        <main className="order-1 relative h-[calc(100svh-260px)] min-h-[430px] overflow-hidden rounded-lg border bg-slate-950 shadow-sm sm:h-[620px] xl:order-2 xl:h-auto xl:min-h-[720px]">
-          <SatelliteMap
-            areas={areas}
-            selectedId={selectedId}
-            drawing={drawing}
-            draftPoints={draftPoints}
-            address={morada}
-            panelSpec={panelSpec}
-            showStringLines={showStringLines}
-            savedView={mapView}
-            onAddPoint={(point) => setDraftPoints((prev) => [...prev, point])}
-            onSelectArea={setSelectedId}
-            onViewChange={setMapView}
-          />
+        <main className="order-1 flex h-[calc(100svh-260px)] min-h-[560px] flex-col overflow-hidden rounded-lg border bg-white shadow-sm sm:h-[720px] xl:order-2 xl:h-auto xl:min-h-[820px]">
+          <div className="relative min-h-0 flex-1 bg-slate-950">
+            <SatelliteMap
+              areas={areas}
+              selectedId={selectedId}
+              drawing={drawing}
+              draftPoints={draftPoints}
+              address={morada}
+              panelSpec={panelSpec}
+              showStringLines={showStringLines}
+              savedView={mapView}
+              onAddPoint={(point) => setDraftPoints((prev) => [...prev, point])}
+              onSelectArea={setSelectedId}
+              onViewChange={setMapView}
+            />
 
-          <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] hidden items-end gap-6 text-white sm:flex">
-            <div className="space-y-1 text-xs font-semibold drop-shadow">
-              <div className="h-0.5 w-28 bg-white" />
-              <div className="flex justify-between">
-                <span>0</span>
-                <span>10</span>
-                <span>20 m</span>
+            <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] hidden items-end gap-6 text-white sm:flex">
+              <div className="space-y-1 text-xs font-semibold drop-shadow">
+                <div className="h-0.5 w-28 bg-white" />
+                <div className="flex justify-between">
+                  <span>0</span>
+                  <span>10</span>
+                  <span>20 m</span>
+                </div>
               </div>
+            </div>
+
+            <div className="absolute bottom-4 left-1/2 z-[1000] hidden -translate-x-1/2 gap-5 rounded-md bg-white/95 px-4 py-3 text-xs shadow-lg sm:flex">
+              <span className="flex items-center gap-2">
+                <span className="h-4 w-7 rounded border-2 border-dashed border-blue-600" />
+                Area selecionada
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-3 w-5 rounded-sm bg-[#19375f]" />
+                Painel
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-0.5 w-8 bg-green-500" />
+                String automatica
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-0.5 w-8 bg-purple-500" />
+                String manual
+              </span>
             </div>
           </div>
 
-          <div className="absolute bottom-4 left-1/2 z-[1000] hidden -translate-x-1/2 gap-5 rounded-md bg-white/95 px-4 py-3 text-xs shadow-lg sm:flex">
-            <span className="flex items-center gap-2">
-              <span className="h-4 w-7 rounded border-2 border-dashed border-blue-600" />
-              Area selecionada
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-3 w-5 rounded-sm bg-[#19375f]" />
-              Painel
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-0.5 w-8 bg-green-500" />
-              String automatica
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="h-0.5 w-8 bg-purple-500" />
-              String manual
-            </span>
-          </div>
-
-          <div className="absolute bottom-4 right-4 z-[1000] w-48 overflow-hidden rounded-lg bg-white shadow-lg sm:bottom-28 sm:right-6 sm:w-52">
-            <div className="border-b px-4 py-3">
-              <div className="flex items-center gap-3 text-sm font-semibold">
+          <div className="border-t bg-white p-2 sm:p-3">
+            <div className="flex flex-col gap-2 rounded-lg border bg-slate-50 p-2 sm:flex-row sm:items-center sm:justify-between sm:p-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                 <Move className="h-4 w-4" />
                 Mover paineis
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-3 gap-1 sm:w-40">
                 <span />
                 <button
                   type="button"
-                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                  className="rounded border bg-white px-2 py-1 text-xs disabled:opacity-40"
                   disabled={!selectedArea}
                   onClick={() =>
                     selectedArea &&
@@ -661,7 +663,7 @@ export default function WizardMapStep({
                 <span />
                 <button
                   type="button"
-                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                  className="rounded border bg-white px-2 py-1 text-xs disabled:opacity-40"
                   disabled={!selectedArea}
                   onClick={() =>
                     selectedArea &&
@@ -676,7 +678,7 @@ export default function WizardMapStep({
                 </button>
                 <button
                   type="button"
-                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                  className="rounded border bg-white px-2 py-1 text-xs disabled:opacity-40"
                   disabled={!selectedArea}
                   onClick={() =>
                     selectedArea &&
@@ -691,7 +693,7 @@ export default function WizardMapStep({
                 </button>
                 <button
                   type="button"
-                  className="rounded border px-2 py-1 text-xs disabled:opacity-40"
+                  className="rounded border bg-white px-2 py-1 text-xs disabled:opacity-40"
                   disabled={!selectedArea}
                   onClick={() =>
                     selectedArea &&
@@ -705,26 +707,28 @@ export default function WizardMapStep({
                   E
                 </button>
               </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <button
+                  type="button"
+                  className="flex items-center justify-center gap-2 rounded-md border bg-white px-3 py-2 text-sm disabled:opacity-40"
+                  disabled={!selectedArea}
+                  onClick={() =>
+                    updateSelected({ rotacao: (selectedArea?.rotacao ??0) + 2 })
+                  }
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Rodar
+                </button>
+                <button type="button" className="flex items-center justify-center gap-2 rounded-md border bg-white px-3 py-2 text-sm">
+                  <Grid3X3 className="h-4 w-4" />
+                  Grelha
+                </button>
+                <button type="button" className="flex items-center justify-center gap-2 rounded-md border bg-white px-3 py-2 text-sm">
+                  <Info className="h-4 w-4" />
+                  Info
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 border-b px-4 py-3 text-left text-sm"
-              disabled={!selectedArea}
-              onClick={() =>
-                updateSelected({ rotacao: (selectedArea?.rotacao ??0) + 2 })
-              }
-            >
-              <RotateCcw className="h-4 w-4" />
-              Rodar orientacao
-            </button>
-            <button type="button" className="flex w-full items-center gap-3 border-b px-4 py-3 text-left text-sm">
-              <Grid3X3 className="h-4 w-4" />
-              Alinhar a grelha
-            </button>
-            <button type="button" className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm">
-              <Info className="h-4 w-4" />
-              Informacoes
-            </button>
           </div>
         </main>
 
