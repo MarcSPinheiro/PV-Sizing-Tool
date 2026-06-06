@@ -1197,14 +1197,14 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
   }, [inverterUnits, updateInverterUnit]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
 
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <h1 className="text-3xl font-bold tracking-tight">Dimensionamento Automático</h1>
           <p className="text-muted-foreground mt-1">Wizard passo-a-passo para dimensionar o sistema solar.</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0 pt-1">
+        <div className="flex flex-wrap items-center gap-2 shrink-0 sm:justify-end sm:pt-1">
           <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSaved} />
           {projectRow?.nome && (
             <Badge variant="outline" className="text-[10px] max-w-[20ch] truncate" title={projectRow.nome}>
@@ -1227,7 +1227,49 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       </div>
 
       {/* Step indicators */}
-      <div className="relative">
+      <div className="rounded-lg border bg-white p-3 shadow-sm sm:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
+              Passo {step} de {STEPS.length}
+            </p>
+            <p className="truncate text-sm font-semibold">{STEPS[step - 1]?.label}</p>
+          </div>
+          <Badge variant="outline" className="shrink-0">
+            {Math.round(progress)}%
+          </Badge>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="mt-3 flex gap-1 overflow-x-auto pb-1">
+          {STEPS.map(s => {
+            const active = step === s.id;
+            const done = step > s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                className={cn(
+                  "grid h-8 min-w-8 place-items-center rounded-full border text-[11px] font-bold",
+                  done ?"border-primary bg-primary text-primary-foreground" :
+                  active ?"border-primary bg-primary/10 text-primary" :
+                          "border-border bg-muted/30 text-muted-foreground",
+                )}
+                onClick={() => setStep(s.id)}
+                aria-label={`Ir para ${s.label}`}
+              >
+                {done ?<CheckCircle2 size={13} /> : s.id}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="relative hidden sm:block">
         <div className="absolute top-4 left-0 right-0 h-[2px] bg-border/60 rounded-full" />
         <div
           className="absolute top-4 left-0 h-[2px] bg-primary rounded-full transition-all duration-500 ease-out"
@@ -3068,7 +3110,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
         </div>
       )}
       {step === 11 && (
-        <div className="h-[calc(100vh-220px)] min-h-[760px] overflow-hidden rounded-lg border bg-white shadow-sm">
+        <div className="h-[calc(100vh-190px)] min-h-[620px] overflow-hidden rounded-lg border bg-white shadow-sm sm:h-[calc(100vh-220px)] sm:min-h-[760px]">
           <ReportBuilder projectId={projectId} draftOverride={liveReportDraft} companyOverride={company} />
         </div>
       )}
@@ -3077,12 +3119,12 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       </Suspense>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between pt-4 border-t border-border/50 gap-4">
+      <div className="sticky bottom-0 z-20 -mx-3 flex items-center justify-between gap-3 border-t border-border/50 bg-background/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pt-4">
         <Button
           variant="outline"
           onClick={() => setStep(s => Math.max(1, s - 1))}
           disabled={step === 1}
-          className="gap-1.5"
+          className="min-h-11 flex-1 gap-1.5 sm:min-h-10 sm:flex-none"
         >
           <ChevronLeft size={15} /> Anterior
         </Button>
@@ -3090,7 +3132,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
           {step} de {STEPS.length}
         </span>
         {step < STEPS.length ?(
-          <Button onClick={goNext} disabled={isSizing} className="gap-1.5">
+          <Button onClick={goNext} disabled={isSizing} className="min-h-11 flex-1 gap-1.5 sm:min-h-10 sm:flex-none">
             {isSizing && <Loader2 size={15} className="animate-spin" />}
             {
   step === 3

@@ -219,9 +219,9 @@ function SearchBox() {
   };
 
   return (
-    <div className="absolute left-5 top-5 z-[1000] flex w-[min(360px,calc(100%-40px))] overflow-hidden rounded-md bg-white shadow-lg">
+    <div className="absolute left-3 top-3 z-[1000] flex w-[calc(100%-24px)] overflow-hidden rounded-md bg-white shadow-lg sm:left-5 sm:top-5 sm:w-[min(360px,calc(100%-40px))]">
       <input
-        className="h-11 min-w-0 flex-1 px-4 text-sm outline-none"
+        className="h-10 min-w-0 flex-1 px-3 text-sm outline-none sm:h-11 sm:px-4"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
@@ -231,7 +231,7 @@ function SearchBox() {
       />
       <button
         type="button"
-        className="grid h-11 w-12 place-items-center border-l text-slate-700"
+        className="grid h-10 w-11 place-items-center border-l text-slate-700 sm:h-11 sm:w-12"
         onClick={() => search()}
       >
         <LocateFixed className="h-4 w-4" />
@@ -372,23 +372,23 @@ function MapTools() {
 
   return (
     <>
-      <div className="absolute left-5 top-24 z-[1000] overflow-hidden rounded-md bg-white shadow-lg">
+      <div className="absolute left-3 top-16 z-[1000] overflow-hidden rounded-md bg-white shadow-lg sm:left-5 sm:top-24">
         <button
           type="button"
-          className="grid h-11 w-11 place-items-center border-b"
+          className="grid h-10 w-10 place-items-center border-b sm:h-11 sm:w-11"
           onClick={() => map.zoomIn()}
         >
           <Plus className="h-4 w-4" />
         </button>
         <button
           type="button"
-          className="grid h-11 w-11 place-items-center"
+          className="grid h-10 w-10 place-items-center sm:h-11 sm:w-11"
           onClick={() => map.zoomOut()}
         >
           <Minus className="h-4 w-4" />
         </button>
       </div>
-      <div className="absolute right-5 top-5 z-[1000] flex overflow-hidden rounded-md bg-white shadow-lg">
+      <div className="absolute right-3 top-16 z-[1000] hidden overflow-hidden rounded-md bg-white shadow-lg sm:right-5 sm:top-5 sm:flex">
         <button type="button" className="bg-blue-50 px-6 py-3 text-sm font-semibold text-blue-700">
           Satelite
         </button>

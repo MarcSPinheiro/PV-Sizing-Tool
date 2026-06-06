@@ -441,7 +441,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
 
           {/* System totals */}
           {sys && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <div className="grid grid-cols-1 gap-2 pt-1 sm:grid-cols-4">
               {[
                 { label: "Cap. nominal", val: `${sys.totalCap.toFixed(1)} kWh` },
                 { label: `Cap. útil (DoD ${sys.dodPct}%)`, val: `${sys.utilCap.toFixed(1)} kWh`, hi: true },
@@ -511,7 +511,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
           </CardHeader>
           <CardContent className="space-y-4">
             {/* KPIs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
               {[
                 {
                   label: "Excedente instant. médio/dia",
@@ -644,7 +644,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                     </ComposedChart>
                   </ResponsiveContainer>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                     {[
                       { label: "Produção anual", val: `${fmt(activeCenario!.energiaAnualEstimada)} kWh`, sub: "sistema FV" },
                       { label: "Autoconsumo com bateria", val: `${study.autoconsumoPercComBat}%`, sub: `${fmt(batteryChart.autoconsumoComBateria)} kWh/ano` },
@@ -758,7 +758,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                 const paybackBom = payback !== null && payback <= 12;
                 return (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       {[
                         {
                           label: "Investimento bateria",

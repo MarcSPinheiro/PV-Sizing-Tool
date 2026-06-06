@@ -15,37 +15,50 @@ function fmtTime(d: Date): string {
 
 export default function SaveStatusIndicator({ status, lastSavedAt, className }: Props) {
   const base = "inline-flex items-center gap-1.5 text-xs font-medium";
+
+  let Icon = CheckCircle2;
+  let label = "";
+  let tone = "text-muted-foreground";
+  let testId = "save-indicator-idle";
+  let spin = false;
+
   if (status === "saving") {
-    return (
-      <span className={cn(base, "text-muted-foreground", className)} data-testid="save-indicator-saving">
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        A guardar…
-      </span>
-    );
+    Icon = Loader2;
+    label = "A guardar...";
+    tone = "text-muted-foreground";
+    testId = "save-indicator-saving";
+    spin = true;
+  } else if (status === "error") {
+    Icon = AlertTriangle;
+    label = "Erro ao guardar";
+    tone = "text-destructive";
+    testId = "save-indicator-error";
+  } else if (status === "offline") {
+    Icon = CloudOff;
+    label = "Só local (sem projeto)";
+    tone = "text-amber-600 dark:text-amber-400";
+    testId = "save-indicator-offline";
+  } else if (status === "saved" && lastSavedAt) {
+    Icon = CheckCircle2;
+    label = `Guardado às ${fmtTime(lastSavedAt)}`;
+    tone = "text-emerald-600 dark:text-emerald-400";
+    testId = "save-indicator-saved";
   }
-  if (status === "error") {
-    return (
-      <span className={cn(base, "text-destructive", className)} data-testid="save-indicator-error">
-        <AlertTriangle className="h-3.5 w-3.5" />
-        Erro ao guardar
+
+  return (
+    <span
+      className={cn(base, tone, !label && "invisible", className)}
+      data-testid={testId}
+      aria-hidden={!label}
+      aria-live="off"
+      translate="no"
+    >
+      <span className="grid h-3.5 w-3.5 shrink-0 place-items-center">
+        <Icon className={cn("h-3.5 w-3.5", spin && "animate-spin")} aria-hidden="true" />
       </span>
-    );
-  }
-  if (status === "offline") {
-    return (
-      <span className={cn(base, "text-amber-600 dark:text-amber-400", className)} data-testid="save-indicator-offline">
-        <CloudOff className="h-3.5 w-3.5" />
-        Só local (sem projeto)
+      <span className="whitespace-nowrap" suppressHydrationWarning>
+        {label || "Estado"}
       </span>
-    );
-  }
-  if (status === "saved" && lastSavedAt) {
-    return (
-      <span className={cn(base, "text-emerald-600 dark:text-emerald-400", className)} data-testid="save-indicator-saved">
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        Guardado às {fmtTime(lastSavedAt)}
-      </span>
-    );
-  }
-  return null;
+    </span>
+  );
 }

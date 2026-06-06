@@ -92,7 +92,7 @@ export default function WizardStep1Cliente({ clienteForm, locForm }: Props) {
               )} />
 
               <FormField control={clienteForm.control} name="potenciaContratada" render={({ field }) => (
-                <FormItem className="max-w-[180px]">
+                <FormItem className="w-full sm:max-w-[180px]">
                   <FormLabel>Potência Contratada (kVA)</FormLabel>
                   <FormControl><Input type="number" min={0} step={0.5} {...field} /></FormControl>
                   <p className="text-xs text-muted-foreground">Encontra-se na fatura elétrica</p>
@@ -136,7 +136,7 @@ export default function WizardStep1Cliente({ clienteForm, locForm }: Props) {
           )}
 
           <Form {...locForm}>
-            <form className="grid grid-cols-2 gap-4">
+            <form className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField control={locForm.control} name="latitude" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Latitude</FormLabel>
@@ -164,7 +164,7 @@ export default function WizardStep1Cliente({ clienteForm, locForm }: Props) {
         </CardHeader>
         <CardContent>
           <Form {...locForm}>
-            <form className="grid grid-cols-2 gap-4">
+            <form className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField control={locForm.control} name="inclinacao" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Inclinação (°)</FormLabel>

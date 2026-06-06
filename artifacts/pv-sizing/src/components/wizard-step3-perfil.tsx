@@ -49,7 +49,7 @@ export default function WizardStep3Perfil({ consumoData, onConsumoChange, consum
           <CardDescription>Dados recolhidos no passo anterior.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { label: "Consumo anual",   val: `${consumoData.consumoAnual.toLocaleString("pt-PT")} kWh` },
               { label: "Preço médio",     val: `${consumoData.precoKwh?.toFixed(3) ?? "0,180"} €/kWh` },
@@ -89,7 +89,7 @@ export default function WizardStep3Perfil({ consumoData, onConsumoChange, consum
             <Moon size={18} className="text-blue-500 shrink-0" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <Sun size={20} className="text-amber-500" />
               <div>
@@ -203,7 +203,7 @@ export default function WizardStep3Perfil({ consumoData, onConsumoChange, consum
             </div>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium">Incluir Bateria</p>
               <p className="text-xs text-muted-foreground">Armazenamento para consumo noturno ou backup</p>

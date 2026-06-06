@@ -114,18 +114,18 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
   return (
     <div className="space-y-4">
       {/* Top bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <FileText size={18} className="text-primary" />
           <span className="font-semibold text-sm">{state.codigo}</span>
         </div>
-        <Button onClick={handlePrint} className="gap-2">
+        <Button onClick={handlePrint} className="w-full gap-2 sm:w-auto">
           <Printer size={15} /> Imprimir / Exportar PDF
         </Button>
       </div>
 
       <Tabs value={tab} onValueChange={v => setTab(v as "editar" | "visualizar")}>
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 sm:w-auto">
           <TabsTrigger value="editar">Editar</TabsTrigger>
           <TabsTrigger value="visualizar">Pré-visualizar</TabsTrigger>
         </TabsList>
@@ -157,7 +157,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                     rows={2}
                   />
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Field label="NIF">
                     <Input value={state.empresaNif} onChange={e => set("empresaNif", e.target.value)} placeholder="NIF" />
                   </Field>
@@ -165,7 +165,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                     <Input value={state.empresaTelefone} onChange={e => set("empresaTelefone", e.target.value)} placeholder="+351 9xx xxx xxx" />
                   </Field>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Field label="E-mail">
                     <Input value={state.empresaEmail} onChange={e => set("empresaEmail", e.target.value)} placeholder="email@empresa.pt" type="email" />
                   </Field>
@@ -177,7 +177,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                   <Input value={state.empresaIban} onChange={e => set("empresaIban", e.target.value)} placeholder="PT50 0000 0000 0000 0000 0000 0" />
                 </Field>
                 <Field label="Logotipo">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     {state.empresaLogoUrl ?(
                       <img src={state.empresaLogoUrl} alt="Logotipo" className="h-12 w-20 rounded border object-contain p-1" />
                     ) : null}
@@ -203,7 +203,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                   <Field label="Nome do Cliente">
                     <Input value={state.nomeCliente} onChange={e => set("nomeCliente", e.target.value)} placeholder="Nome completo ou empresa" />
                   </Field>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <Field label="NIF do Cliente">
                       <Input value={state.nifCliente} onChange={e => set("nifCliente", e.target.value)} placeholder="NIF" />
                     </Field>
@@ -246,7 +246,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
               <CardTitle className="text-sm">Dados do Orçamento</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Field label="Código">
                   <Input value={state.codigo} onChange={e => set("codigo", e.target.value)} />
                 </Field>
@@ -270,11 +270,11 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                 <Package size={15} /> Componentes e Serviços
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 overflow-x-auto">
               {/* Header row */}
               <div
                 className="grid gap-1 text-xs font-medium text-muted-foreground px-1"
-                style={{ gridTemplateColumns: "60px 1fr 70px 90px 60px 32px 32px" }}
+                style={{ gridTemplateColumns: "60px 1fr 70px 90px 60px 32px 32px", minWidth: "720px" }}
               >
                 <span>Código</span>
                 <span>Descrição</span>
@@ -292,7 +292,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
                     <div
                       key={l.id}
                       className="grid gap-1 items-center"
-                      style={{ gridTemplateColumns: "60px 1fr 70px 90px 60px 32px 32px" }}
+                      style={{ gridTemplateColumns: "60px 1fr 70px 90px 60px 32px 32px", minWidth: "720px" }}
                     >
                       <Input
                         value={l.codigo}
@@ -351,7 +351,7 @@ function WizardOrcamento({ state, onChange, estudo }: Props) {
               {/* Totals */}
               <Separator className="mt-3" />
               <div className="flex justify-end">
-                <div className="text-sm space-y-1 min-w-[220px]">
+                <div className="w-full text-sm space-y-1 sm:w-auto sm:min-w-[220px]">
                   <div className="flex justify-between text-muted-foreground">
                     <span>Total Líquido</span>
                     <span className="font-medium text-foreground">{fmtEurPT(totalLiquido)}</span>

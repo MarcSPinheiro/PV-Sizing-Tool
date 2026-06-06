@@ -218,7 +218,7 @@ function WizardStep7Financeiro({
         </CardHeader>
         {showParams && (
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <ParamField
                 label="Investimento Total"
                 value={investimentoEdit}
@@ -268,8 +268,8 @@ function WizardStep7Financeiro({
       </Card>
 
       {/* ── Main KPIs ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="col-span-2 sm:col-span-1 flex items-start gap-3 p-4 rounded-xl border border-border bg-muted/20">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+        <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-muted/20">
           <Euro size={20} className="mt-0.5 shrink-0 text-muted-foreground" />
           <div className="min-w-0">
             <p className="text-xs text-muted-foreground">Investimento Total</p>
@@ -290,7 +290,7 @@ function WizardStep7Financeiro({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <KPI icon={Sun}        label="Produção anual estimada"  value={`${fmt(energiaAnualEstimada)} kWh`}   sub="PVGIS/método HSP" />
             <KPI icon={Zap}        label="Autoconsumo estimado"     value={`${fmt(autoconsumoAnual)} kWh`}        sub={`${autoconsumoPerc}% da produção`}  highlight />
             <KPI icon={TrendingUp} label="Excedente injetado"       value={`${fmt(excessoAnual)} kWh`}            sub={`${fmt(precoInjecao * 100, 1)} c€/kWh`} />
@@ -367,7 +367,7 @@ function WizardStep7Financeiro({
           </div>
 
           {/* Milestone summary */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
               { label: "Poupança a 10 anos", value: p10 },
               { label: "Poupança a 15 anos", value: p15 },
@@ -396,7 +396,7 @@ function WizardStep7Financeiro({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <div className="p-3 bg-muted/30 rounded-lg text-center">
               <p className="text-xs text-muted-foreground">Payback simples</p>
               <p className="text-lg font-bold">

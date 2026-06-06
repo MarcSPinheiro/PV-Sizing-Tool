@@ -388,7 +388,7 @@ function PerUnitStringCard({
         )}
 
         {/* Summary boxes */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
           {[
             {
               label: "Painéis/String",
@@ -439,7 +439,7 @@ function PerUnitStringCard({
         {/* Thermal voltage */}
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Análise Térmica</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {[
               { label: `Voc em frio (${tMinPortugal}°C)`, value: `${config.vocFrio.toFixed(0)} V`, sub: `< ${vdcMaxUsado.toFixed(0)} V` },
               { label: `Vmpp em calor (${tMaxCelula.toFixed(0)}°C)`, value: `${config.vmpQuente.toFixed(0)} V`, sub: "janela MPPT" },

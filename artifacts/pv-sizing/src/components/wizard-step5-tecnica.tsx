@@ -545,7 +545,7 @@ function StringSizingCard({
         )}
 
         {/* ── Summary boxes ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
           {[
             {
               label: config.isMixed ? "Painéis/String" : "Painéis/String",
@@ -598,7 +598,7 @@ function StringSizingCard({
         {/* ── Voltage/thermal analysis ── */}
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Análise Térmica de Tensão</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+          <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
             {[
               { label: `Voc em frio (${tMinPortugal}°C)`, value: `${config.vocFrio.toFixed(0)} V`, sub: `< ${vdcMaxUsado.toFixed(0)} V` },
               { label: `Vmpp em calor (${tMaxCelula.toFixed(0)}°C)`, value: `${config.vmpQuente.toFixed(0)} V`, sub: "janela MPPT" },

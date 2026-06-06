@@ -338,9 +338,9 @@ export default function WizardMapStep({
     panelMetric(areaId).strings[index] ??{ requested: 0, placed: 0, outside: 0 };
 
   return (
-    <div className="-mx-2 -mt-4 space-y-4">
-      <div className="grid min-h-[780px] grid-cols-1 gap-4 xl:grid-cols-[300px_minmax(520px,1fr)_300px]">
-        <aside className="space-y-4 rounded-lg border bg-white p-4 shadow-sm">
+    <div className="-mx-1 -mt-3 space-y-4 sm:-mx-2 sm:-mt-4">
+      <div className="grid grid-cols-1 gap-4 xl:min-h-[780px] xl:grid-cols-[300px_minmax(520px,1fr)_300px]">
+        <aside className="order-2 space-y-4 rounded-lg border bg-white p-3 shadow-sm sm:p-4 xl:order-1">
           <div>
             <h2 className="text-xl font-bold">Mapa Satelite</h2>
             <p className="mt-1 text-sm text-slate-600">
@@ -499,7 +499,7 @@ export default function WizardMapStep({
             <p className="text-xs font-semibold uppercase text-slate-700">
               Ferramentas de desenho
             </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Button
                 type="button"
                 size="sm"
@@ -590,7 +590,7 @@ export default function WizardMapStep({
           </div>
         </aside>
 
-        <main className="relative min-h-[720px] overflow-hidden rounded-lg border bg-slate-950 shadow-sm">
+        <main className="order-1 relative h-[calc(100svh-260px)] min-h-[430px] overflow-hidden rounded-lg border bg-slate-950 shadow-sm sm:h-[620px] xl:order-2 xl:h-auto xl:min-h-[720px]">
           <SatelliteMap
             areas={areas}
             selectedId={selectedId}
@@ -605,7 +605,7 @@ export default function WizardMapStep({
             onViewChange={setMapView}
           />
 
-          <div className="pointer-events-none absolute bottom-5 left-5 z-[1000] flex items-end gap-6 text-white">
+          <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] hidden items-end gap-6 text-white sm:flex">
             <div className="space-y-1 text-xs font-semibold drop-shadow">
               <div className="h-0.5 w-28 bg-white" />
               <div className="flex justify-between">
@@ -616,7 +616,7 @@ export default function WizardMapStep({
             </div>
           </div>
 
-          <div className="absolute bottom-5 left-1/2 z-[1000] flex -translate-x-1/2 gap-5 rounded-md bg-white/95 px-4 py-3 text-xs shadow-lg">
+          <div className="absolute bottom-4 left-1/2 z-[1000] hidden -translate-x-1/2 gap-5 rounded-md bg-white/95 px-4 py-3 text-xs shadow-lg sm:flex">
             <span className="flex items-center gap-2">
               <span className="h-4 w-7 rounded border-2 border-dashed border-blue-600" />
               Area selecionada
@@ -635,7 +635,7 @@ export default function WizardMapStep({
             </span>
           </div>
 
-          <div className="absolute bottom-28 right-6 z-[1000] w-52 overflow-hidden rounded-lg bg-white shadow-lg">
+          <div className="absolute bottom-4 right-4 z-[1000] w-48 overflow-hidden rounded-lg bg-white shadow-lg sm:bottom-28 sm:right-6 sm:w-52">
             <div className="border-b px-4 py-3">
               <div className="flex items-center gap-3 text-sm font-semibold">
                 <Move className="h-4 w-4" />
@@ -728,7 +728,7 @@ export default function WizardMapStep({
           </div>
         </main>
 
-        <aside className="space-y-4">
+        <aside className="order-3 space-y-4">
           <section className="rounded-lg border bg-white p-4 shadow-sm">
             <h3 className="font-bold">Resumo do projeto</h3>
             <div className="mt-4 space-y-3 text-sm">
@@ -998,7 +998,7 @@ export default function WizardMapStep({
         </aside>
       </div>
 
-      <div className="grid gap-4 rounded-lg border bg-white p-4 shadow-sm xl:grid-cols-[1fr_1fr_1fr]">
+      <div className="grid gap-4 rounded-lg border bg-white p-3 shadow-sm sm:p-4 xl:grid-cols-[1fr_1fr_1fr]">
         <div>
           <p className="text-sm font-semibold">Orientacoes usadas</p>
           <div className="mt-3 flex flex-wrap gap-4 text-sm">

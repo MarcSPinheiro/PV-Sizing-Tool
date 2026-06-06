@@ -994,7 +994,7 @@ function InvoiceCard({ inv, onRemove, onToggleEdit, onSaveEdit }: InvoiceCardPro
         {/* Inline editor */}
         {inv.showEdit && (
           <div className="mt-3 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium">Consumo Total (kWh)</label>
                 <Input className="mt-1 h-8 text-sm" type="number" value={editConsimo} onChange={e => setEditConsumo(e.target.value)} />
@@ -1002,7 +1002,7 @@ function InvoiceCard({ inv, onRemove, onToggleEdit, onSaveEdit }: InvoiceCardPro
             </div>
             <div>
               <p className="text-xs font-medium mb-1.5">Períodos Tarifários (kWh)</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
                   { label: "Vazio", val: editVazio, set: setEditVazio, cls: "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800" },
                   { label: "Cheio", val: editCheio, set: setEditCheio, cls: "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800" },

@@ -13,14 +13,36 @@ interface State {
   error: Error | null;
 }
 
+function isExternalDomRemovalError(error: Error) {
+  const message = error.message ?? "";
+
+  return (
+    error.name === "NotFoundError" ||
+    message.includes("removeChild") ||
+    message.includes("insertBefore") ||
+    message.includes("n\u00e3o \u00e9 filho deste n\u00f3") ||
+    message.includes("new node is to be inserted") ||
+    message.includes("not a child of this node")
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): State {
+    if (isExternalDomRemovalError(error)) {
+      return { hasError: false, error: null };
+    }
+
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
+    if (isExternalDomRemovalError(error)) {
+      console.warn("[ErrorBoundary] Erro DOM externo ignorado:", error.message);
+      return;
+    }
+
     console.error("[ErrorBoundary] Erro capturado:", error.message, info.componentStack);
   }
 
