@@ -346,7 +346,7 @@ function SvgBatteryStackedChart({
       <g transform={`translate(${left}, ${height - 5})`}>
         {[
           ["#22c55e", "Autoconsumo direto"],
-          ["#0ea5e9", "Carga bateria"],
+          ["#0ea5e9", "Bateria entregue"],
           ["#f59e0b", "Excedente restante"],
           ["#64748b", "Consumo"],
         ].map(([color, label], index) => (
@@ -935,7 +935,7 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     ?MONTHS.map((month, index) => ({
         month,
         autoconsumoDireto: batteryBaseScenario.autoconsumoMensal[index] ??0,
-        cargaBateria: batteryStudy.armazenadoMensal[index] ??0,
+        cargaBateria: batteryStudy.entregueMensal[index] ??0,
         excedenteRestante: batteryStudy.excedenteRestanteMensal[index] ??0,
         consumo: batteryBaseScenario.consumoMensal[index] ??0,
       }))

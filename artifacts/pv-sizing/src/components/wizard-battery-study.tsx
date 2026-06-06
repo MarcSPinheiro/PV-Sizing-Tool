@@ -103,6 +103,9 @@ export function calcBatteryStudy(
 
   for (let m = 0; m < 12; m++) {
     // Monthly production = direct autoconsumo + grid export
+    const consumoMes = cenario.consumoMensal[m] ?? 0;
+    const autoconsumoDiretoMes = Math.min(cenario.autoconsumoMensal[m] ?? 0, consumoMes);
+    const consumoRestanteMes = Math.max(0, consumoMes - autoconsumoDiretoMes);
     const producaoMes = (cenario.autoconsumoMensal[m] ?? 0) + (cenario.excessoMensal[m] ?? 0);
     const producaoDia = producaoMes / DIAS_MES[m];
     const consumoDia  = cenario.consumoMensal[m] / DIAS_MES[m];
@@ -139,7 +142,7 @@ export function calcBatteryStudy(
     }
 
     const armazenadoMes = armazenadoDia * DIAS_MES[m];
-    const entregueMes = entregouDia * DIAS_MES[m];
+    const entregueMes = Math.min(entregouDia * DIAS_MES[m], consumoRestanteMes);
     const excedenteRestanteMes = Math.max(0, (cenario.excessoMensal[m] ?? 0) - armazenadoMes);
 
     armazenadoAnual += armazenadoMes;
@@ -273,7 +276,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
       return {
         mes: MONTH_LABELS[i],
         autoconsumoDireto,
-        bateria: study.armazenadoMensal[i] ?? 0,
+        bateria: study.entregueMensal[i] ?? 0,
         excedenteComBat: study.excedenteRestanteMensal[i] ?? 0,
         consumo,
       };
@@ -597,7 +600,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                 <TrendingUp size={18} className="text-emerald-500" />
                 Análise Energética: Com vs. Sem Bateria
               </CardTitle>
-              <CardDescription>Impacto da bateria no autoconsumo e na energia armazenada</CardDescription>
+              <CardDescription>Impacto da bateria no autoconsumo e na energia entregue aos consumos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {batteryChart && (
@@ -605,7 +608,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                   <div>
                     <p className="font-semibold text-sm">Produção Estimada vs Consumo Mensal — Com Bateria</p>
                     <p className="text-xs text-muted-foreground">
-                      Autoconsumo direto + carga da bateria + excedente restante vs. consumo
+                      Autoconsumo direto + energia entregue pela bateria + excedente restante vs. consumo
                     </p>
                   </div>
 
@@ -617,7 +620,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                         formatter={(value: number, name: string) => {
                           const labels: Record<string, string> = {
                             autoconsumoDireto: "Autoconsumo direto",
-                            bateria: "Carga da bateria",
+                            bateria: "Bateria entregue",
                             excedenteComBat: "Excedente restante",
                             consumo: "Consumo",
                           };
@@ -630,7 +633,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                         formatter={(value) => {
                           const labels: Record<string, string> = {
                             autoconsumoDireto: "Autoconsumo direto",
-                            bateria: "Carga da bateria",
+                            bateria: "Bateria entregue",
                             excedenteComBat: "Excedente restante",
                             consumo: "Consumo",
                           };
@@ -649,7 +652,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                       { label: "Produção anual", val: `${fmt(activeCenario!.energiaAnualEstimada)} kWh`, sub: "sistema FV" },
                       { label: "Autoconsumo com bateria", val: `${study.autoconsumoPercComBat}%`, sub: `${fmt(batteryChart.autoconsumoComBateria)} kWh/ano` },
                       { label: "Excedente restante", val: `${fmt(Math.round(batteryChart.excedenteComBateriaAnual))} kWh`, sub: `antes: ${fmt(activeCenario!.excessoAnual)} kWh` },
-                      { label: "Usado da bateria", val: `${fmt(study.ganhoAnual)} kWh`, sub: `${fmt(Math.round(study.energiaArmazenadaAnual))} kWh armazenados` },
+                      { label: "Usado da bateria", val: `${fmt(study.ganhoAnual)} kWh`, sub: `${fmt(Math.round(study.energiaArmazenadaAnual))} kWh carregados` },
                     ].map((kpi) => (
                       <div key={kpi.label} className="rounded-xl p-3 text-center border bg-muted/30">
                         <p className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</p>
