@@ -7,7 +7,6 @@ import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 
 // Pages
-import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Customers from "@/pages/customers";
 import CustomerDetail from "@/pages/customer-detail";
@@ -48,7 +47,7 @@ function ProtectedApp() {
     <ProtectedRoute>
       <Layout>
         <Switch>
-          <Route path="/" component={Landing} />
+          <Route path="/"><Redirect to="/painel" /></Route>
           <Route path="/painel" component={Dashboard} />
           <Route path="/clientes" component={Customers} />
           <Route path="/clientes/:id" component={CustomerDetail} />
