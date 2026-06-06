@@ -166,15 +166,15 @@ function WizardCenarios({ cenarios, recomendado, selectedTipo, coberturaMeta, on
               <CardContent className="px-4 py-3 space-y-3">
                 {/* ── System metrics ── */}
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between gap-3">
                     <MetricTooltip label="Potência FV" tip="Potência de pico total do sistema fotovoltaico instalado (kWp)" />
                     <span className="font-bold text-sm tabular-nums">{c.potenciaInstalada} kWp</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between gap-3">
                     <MetricTooltip label="Produção anual" tip="Estimativa de energia eléctrica produzida anualmente, baseada em dados PVGIS para a localização definida" />
                     <span className="font-semibold tabular-nums">{fmt(c.energiaAnualEstimada)} kWh</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between gap-3">
                     <MetricTooltip label="Cobertura solar" tip="Percentagem do consumo anual coberta pela produção solar (autoconsumo + excedente utilizado)" />
                     <span
                       className={cn(
@@ -187,11 +187,11 @@ function WizardCenarios({ cenarios, recomendado, selectedTipo, coberturaMeta, on
                       {c.coberturaReal}%
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between gap-3">
                     <MetricTooltip label="Autoconsumo" tip="Percentagem da energia solar produzida que é consumida directamente no local (vs. injectada na rede)" />
                     <span className="font-semibold tabular-nums">{c.autoconsumoPerc}%</span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between gap-3">
                     <MetricTooltip label="Excedente rede" tip="Energia solar produzida em excesso face ao consumo, injectada na rede (kWh/ano)" />
                     <span className="font-semibold tabular-nums text-amber-600 dark:text-amber-400">{fmt(c.excessoAnual)} kWh</span>
                   </div>

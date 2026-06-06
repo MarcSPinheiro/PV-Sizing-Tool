@@ -164,7 +164,7 @@ export default function Panels() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Painéis Solares</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Painéis Solares</h1>
           <p className="text-muted-foreground mt-1">Gira o catálogo de módulos fotovoltaicos.</p>
         </div>
 
@@ -294,7 +294,7 @@ export default function Panels() {
       </div>
 
       <div className="overflow-x-auto border rounded-md bg-card">
-        <Table>
+        <Table className="min-w-[780px]">
           <TableHeader>
             <TableRow>
               <TableHead>Fabricante</TableHead>

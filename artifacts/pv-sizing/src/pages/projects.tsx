@@ -408,7 +408,7 @@ export default function Projects() {
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusKey)}>
-        <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+        <TabsList className="grid h-auto w-full grid-cols-1 sm:w-auto sm:grid-cols-3">
           <TabsTrigger value="todos">Todos ({counts.todos})</TabsTrigger>
           <TabsTrigger value="rascunho">Rascunho ({counts.rascunho})</TabsTrigger>
           <TabsTrigger value="em_analise">Em análise ({counts.em_analise})</TabsTrigger>
@@ -421,7 +421,7 @@ export default function Projects() {
         <Skeleton className="h-60 w-full" />
       ) : filtered.length > 0 ? (
         <div className="border rounded-lg bg-card overflow-x-auto">
-          <Table>
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Projeto</TableHead>

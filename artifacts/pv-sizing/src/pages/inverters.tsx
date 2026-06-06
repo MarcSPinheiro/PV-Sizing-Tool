@@ -152,7 +152,7 @@ export default function Inverters() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inversores</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Inversores</h1>
           <p className="text-muted-foreground mt-1">Gira o catálogo de inversores.</p>
         </div>
 
@@ -270,7 +270,7 @@ export default function Inverters() {
       </div>
 
       <div className="overflow-x-auto border rounded-md bg-card">
-        <Table>
+        <Table className="min-w-[840px]">
           <TableHeader>
             <TableRow>
               <TableHead>Fabricante</TableHead>

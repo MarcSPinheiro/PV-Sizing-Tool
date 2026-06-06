@@ -242,8 +242,8 @@ export default function ProjectEntryCard({ onProjectReady }: Props) {
                   Introduza um nome para guardar o estudo. Sem nome não é possível continuar.
                 </p>
 
-                <div className="flex justify-between pt-2">
-                  <Button type="button" variant="outline" onClick={() => setMode("choose")}>Voltar</Button>
+                <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-between">
+                  <Button type="button" variant="outline" onClick={() => setMode("choose")} className="w-full sm:w-auto">Voltar</Button>
                   <Button type="submit" disabled={create.isPending} data-testid="button-create-project">
                     {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Criar e começar
@@ -279,7 +279,7 @@ export default function ProjectEntryCard({ onProjectReady }: Props) {
                 <button
                   key={p.id}
                   onClick={() => onProjectReady(p.id)}
-                  className="w-full text-left p-3 rounded-md border hover-elevate active-elevate-2 flex items-center justify-between"
+                  className="w-full text-left p-3 rounded-md border hover-elevate active-elevate-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
                   data-testid={`button-continue-${p.id}`}
                 >
                   <div>
@@ -288,7 +288,7 @@ export default function ProjectEntryCard({ onProjectReady }: Props) {
                       Passo {p.currentStep}/8 · {relTime(p.lastSavedAt ?? p.updatedAt)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
                     <Badge className={meta.cls}>{meta.label}</Badge>
                     <ArrowRight className="h-4 w-4" />
                   </div>
