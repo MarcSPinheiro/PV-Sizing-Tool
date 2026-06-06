@@ -162,7 +162,7 @@ export default function Panels() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Painéis Solares</h1>
           <p className="text-muted-foreground mt-1">Gira o catálogo de módulos fotovoltaicos.</p>
@@ -173,7 +173,7 @@ export default function Panels() {
           setIsCreateOpen(open);
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Novo Painel
             </Button>
@@ -232,7 +232,7 @@ export default function Panels() {
             />
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField control={form.control} name="fabricante" render={({ field }) => (
                     <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
@@ -271,7 +271,7 @@ export default function Panels() {
                   )} />
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={createPanel.isPending}>
+                  <Button type="submit" disabled={createPanel.isPending} className="w-full sm:w-auto">
                     {createPanel.isPending ? "A guardar..." : "Guardar Painel"}
                   </Button>
                 </div>
@@ -282,7 +282,7 @@ export default function Panels() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar painéis..."
@@ -293,7 +293,7 @@ export default function Panels() {
         </div>
       </div>
 
-      <div className="border rounded-md bg-card">
+      <div className="overflow-x-auto border rounded-md bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -347,7 +347,7 @@ export default function Panels() {
                         </DialogHeader>
                         <Form {...form}>
                           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <FormField control={form.control} name="fabricante" render={({ field }) => (
                                 <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                               )} />
@@ -386,7 +386,7 @@ export default function Panels() {
                               )} />
                             </div>
                             <div className="flex justify-end">
-                              <Button type="submit" disabled={updatePanel.isPending}>
+                              <Button type="submit" disabled={updatePanel.isPending} className="w-full sm:w-auto">
                                 {updatePanel.isPending ? "A atualizar..." : "Atualizar Painel"}
                               </Button>
                             </div>

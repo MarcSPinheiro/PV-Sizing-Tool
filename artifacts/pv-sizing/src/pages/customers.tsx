@@ -253,7 +253,7 @@ export default function Customers() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
           <p className="text-muted-foreground mt-1">Gira os perfis de consumo e dados dos clientes.</p>
@@ -264,7 +264,7 @@ export default function Customers() {
           setIsCreateOpen(open);
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Novo Cliente
             </Button>
@@ -275,12 +275,12 @@ export default function Customers() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField control={form.control} name="nome" render={({ field }) => (
-                    <FormItem className="col-span-2"><FormLabel>Nome / Empresa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem className="sm:col-span-2"><FormLabel>Nome / Empresa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={form.control} name="morada" render={({ field }) => (
-                    <FormItem className="col-span-2"><FormLabel>Morada Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem className="sm:col-span-2"><FormLabel>Morada Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={form.control} name="codigoPostal" render={({ field }) => (
                     <FormItem>
@@ -296,7 +296,7 @@ export default function Customers() {
                       <FormMessage />
                     </FormItem>
                   )} />
-                  <div className="col-span-2 flex items-end">
+                  <div className="flex items-end sm:col-span-2">
                     <Button type="button" variant="outline" className="w-full" onClick={updateCoordinatesFromAddress} disabled={isLocating}>
                       <LocateFixed className="mr-2 h-4 w-4" />
                       {isLocating ? "A localizar..." : "Atualizar coordenadas"}
@@ -354,7 +354,7 @@ export default function Customers() {
                   )} />
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={createCustomer.isPending}>
+                  <Button type="submit" disabled={createCustomer.isPending} className="w-full sm:w-auto">
                     {createCustomer.isPending ?"A guardar..." : "Guardar Cliente"}
                   </Button>
                 </div>
@@ -365,7 +365,7 @@ export default function Customers() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar clientes..."
@@ -376,7 +376,7 @@ export default function Customers() {
         </div>
       </div>
 
-      <div className="border rounded-md bg-card">
+      <div className="overflow-x-auto border rounded-md bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -440,12 +440,12 @@ export default function Customers() {
                           </DialogHeader>
                           <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <FormField control={form.control} name="nome" render={({ field }) => (
-                                  <FormItem className="col-span-2"><FormLabel>Nome / Empresa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                  <FormItem className="sm:col-span-2"><FormLabel>Nome / Empresa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
                                 <FormField control={form.control} name="morada" render={({ field }) => (
-                                  <FormItem className="col-span-2"><FormLabel>Morada Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                                  <FormItem className="sm:col-span-2"><FormLabel>Morada Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )} />
                                 <FormField control={form.control} name="codigoPostal" render={({ field }) => (
                                   <FormItem>
@@ -461,7 +461,7 @@ export default function Customers() {
                                     <FormMessage />
                                   </FormItem>
                                 )} />
-                                <div className="col-span-2 flex items-end">
+                                <div className="flex items-end sm:col-span-2">
                                   <Button type="button" variant="outline" className="w-full" onClick={updateCoordinatesFromAddress} disabled={isLocating}>
                                     <LocateFixed className="mr-2 h-4 w-4" />
                                     {isLocating ? "A localizar..." : "Atualizar coordenadas"}
@@ -519,7 +519,7 @@ export default function Customers() {
                                 )} />
                               </div>
                               <div className="flex justify-end">
-                                <Button type="submit" disabled={updateCustomer.isPending}>
+                                <Button type="submit" disabled={updateCustomer.isPending} className="w-full sm:w-auto">
                                   {updateCustomer.isPending ?"A atualizar..." : "Atualizar Cliente"}
                                 </Button>
                               </div>

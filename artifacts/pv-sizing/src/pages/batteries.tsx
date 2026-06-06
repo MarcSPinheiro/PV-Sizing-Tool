@@ -183,7 +183,7 @@ export default function Batteries() {
             }}
           />
         )}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField control={form.control} name="fabricante" render={({ field }) => (
             <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
           )} />
@@ -208,7 +208,7 @@ export default function Batteries() {
           )} />
         </div>
         <div className="flex justify-end">
-          <Button type="submit" disabled={isEdit ? updateBattery.isPending : createBattery.isPending}>
+          <Button type="submit" disabled={isEdit ? updateBattery.isPending : createBattery.isPending} className="w-full sm:w-auto">
             {isEdit
               ? (updateBattery.isPending ? "A atualizar..." : "Atualizar Bateria")
               : (createBattery.isPending ? "A criar..." : "Criar Bateria")}
@@ -220,7 +220,7 @@ export default function Batteries() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Baterias</h1>
           <p className="text-muted-foreground mt-1">Gira o catálogo de sistemas de armazenamento.</p>
@@ -231,7 +231,7 @@ export default function Batteries() {
           setIsCreateOpen(open);
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nova Bateria
             </Button>
@@ -255,7 +255,7 @@ export default function Batteries() {
         />
       </div>
 
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>

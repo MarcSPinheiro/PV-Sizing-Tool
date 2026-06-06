@@ -150,7 +150,7 @@ export default function Inverters() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Inversores</h1>
           <p className="text-muted-foreground mt-1">Gira o catálogo de inversores.</p>
@@ -161,7 +161,7 @@ export default function Inverters() {
           setIsCreateOpen(open);
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Novo Inversor
             </Button>
@@ -214,7 +214,7 @@ export default function Inverters() {
             />
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField control={form.control} name="fabricante" render={({ field }) => (
                     <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
@@ -247,7 +247,7 @@ export default function Inverters() {
                   )} />
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={createInverter.isPending}>
+                  <Button type="submit" disabled={createInverter.isPending} className="w-full sm:w-auto">
                     {createInverter.isPending ? "A guardar..." : "Guardar Inversor"}
                   </Button>
                 </div>
@@ -258,7 +258,7 @@ export default function Inverters() {
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Pesquisar inversores..."
@@ -269,7 +269,7 @@ export default function Inverters() {
         </div>
       </div>
 
-      <div className="border rounded-md bg-card">
+      <div className="overflow-x-auto border rounded-md bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -323,7 +323,7 @@ export default function Inverters() {
                         </DialogHeader>
                         <Form {...form}>
                           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                               <FormField control={form.control} name="fabricante" render={({ field }) => (
                                 <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                               )} />
@@ -356,7 +356,7 @@ export default function Inverters() {
                               )} />
                             </div>
                             <div className="flex justify-end">
-                              <Button type="submit" disabled={updateInverter.isPending}>
+                              <Button type="submit" disabled={updateInverter.isPending} className="w-full sm:w-auto">
                                 {updateInverter.isPending ? "A atualizar..." : "Atualizar Inversor"}
                               </Button>
                             </div>

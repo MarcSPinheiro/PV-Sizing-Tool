@@ -170,14 +170,14 @@ export default function Dashboard() {
         </div>
         <Button
           onClick={() => navigate("/dimensionamento")}
-          className="self-start sm:self-auto shrink-0 gap-1.5"
+          className="w-full shrink-0 gap-1.5 sm:w-auto sm:self-auto"
         >
           <Plus size={15} /> Novo Dimensionamento
         </Button>
       </div>
 
       {/* KPI Grid */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {KPI_CONFIG.map((cfg) => (
           <KpiCard
             key={cfg.key}
@@ -193,7 +193,7 @@ export default function Dashboard() {
         {/* Donut Chart */}
         <Card className="shadow-sm border-border/60">
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-base font-semibold">
                 Clientes por Tipo
               </CardTitle>

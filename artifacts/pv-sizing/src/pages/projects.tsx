@@ -227,7 +227,7 @@ export default function Projects() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <FolderKanban className="text-primary" />
@@ -238,12 +238,12 @@ export default function Projects() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => navigate(`${BASE || ""}/dimensionamento`)} data-testid="button-new-wizard">
+          <Button onClick={() => navigate(`${BASE || ""}/dimensionamento`)} data-testid="button-new-wizard" className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" /> Novo Estudo (Wizard)
           </Button>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={openCreate} data-testid="button-new-project">
+              <Button variant="outline" onClick={openCreate} data-testid="button-new-project" className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> Manual
               </Button>
             </DialogTrigger>
@@ -261,7 +261,7 @@ export default function Projects() {
                     </FormItem>
                   )} />
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <FormField control={form.control} name="customerId" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Cliente</FormLabel>
@@ -287,7 +287,7 @@ export default function Projects() {
                     )} />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <FormField control={form.control} name="panelId" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Painel</FormLabel>
@@ -317,7 +317,7 @@ export default function Projects() {
                     )} />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <FormField control={form.control} name="potenciaKwp" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Potência (kWp)</FormLabel>
@@ -344,7 +344,7 @@ export default function Projects() {
                     )} />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <FormField control={form.control} name="orientacao" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Orientação</FormLabel>
@@ -394,9 +394,9 @@ export default function Projects() {
                     </FormItem>
                   )} />
 
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
-                    <Button type="submit" disabled={create.isPending || update.isPending}>
+                  <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
+                    <Button type="submit" disabled={create.isPending || update.isPending} className="w-full sm:w-auto">
                       {editing ? "Atualizar" : "Criar"}
                     </Button>
                   </div>
@@ -408,7 +408,7 @@ export default function Projects() {
       </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as StatusKey)}>
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-3 sm:w-auto">
           <TabsTrigger value="todos">Todos ({counts.todos})</TabsTrigger>
           <TabsTrigger value="rascunho">Rascunho ({counts.rascunho})</TabsTrigger>
           <TabsTrigger value="em_analise">Em análise ({counts.em_analise})</TabsTrigger>
