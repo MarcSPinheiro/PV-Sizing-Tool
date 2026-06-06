@@ -149,7 +149,7 @@ export default function TabEspacamento() {
               </div>
 
               {/* Panel dimensions */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="height">Altura (m)</Label>
                   <Input type="number" id="height" name="height" value={params.height} onChange={handleChange} step="0.01" />
@@ -161,21 +161,21 @@ export default function TabEspacamento() {
               </div>
 
               {/* Angle + Latitude */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {!isCoplanar && (
                   <div className="space-y-2">
                     <Label htmlFor="angle">Inclinação (°)</Label>
                     <Input type="number" id="angle" name="angle" value={params.angle} onChange={handleChange} />
                   </div>
                 )}
-                <div className={`space-y-2 ${isCoplanar ?"col-span-2" : ""}`}>
+                <div className={`space-y-2 ${isCoplanar ?"sm:col-span-2" : ""}`}>
                   <Label htmlFor="latitude">Latitude (°)</Label>
                   <Input type="number" id="latitude" name="latitude" value={params.latitude} onChange={handleChange} step="0.0001" />
                 </div>
               </div>
 
               {/* Rows + Cols */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="rows">Nº Fileiras</Label>
                   <Input type="number" id="rows" name="rows" value={params.rows} onChange={handleChange} min="1" />
@@ -198,9 +198,9 @@ export default function TabEspacamento() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="inverterPower">Potência do Inversor (kW)</Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <Input type="number" id="inverterPower" name="inverterPower" value={params.inverterPower} onChange={handleChange} step="0.1" min="0" placeholder="Ex: 5.0" className="flex-1" />
-                    <div className="grid grid-cols-2 gap-0 rounded-lg border border-slate-200 overflow-hidden text-xs font-medium shrink-0">
+                    <div className="grid grid-cols-2 gap-0 rounded-lg border border-slate-200 overflow-hidden text-xs font-medium sm:shrink-0">
                       <button type="button" onClick={() => setParams(prev => ({ ...prev, inverterPhase: "mono" }))}
                         className={`px-2.5 py-1.5 transition-colors ${params.inverterPhase === "mono" ?"bg-[#1E88E5] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
                         1F
@@ -257,7 +257,7 @@ export default function TabEspacamento() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                 <div className="bg-white p-4 rounded-lg border shadow-sm">
                   <div className="text-xs text-muted-foreground">Projeção Horizontal</div>
                   <div className="text-lg font-semibold text-[#0D2B45]">{results.panelProjectedDepth.toFixed(2)} m</div>
@@ -327,12 +327,12 @@ export default function TabEspacamento() {
               <CardTitle className="text-base text-white tracking-wide">Resumo do Sistema</CardTitle>
             </CardHeader>
             <CardContent className="pt-5 pb-4">
-              <div className="mb-5 flex items-center justify-between bg-[#F0F6FB] rounded-lg px-4 py-3 border border-[#1E88E5]/20">
+              <div className="mb-5 flex flex-col gap-3 bg-[#F0F6FB] rounded-lg px-4 py-3 border border-[#1E88E5]/20 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
                   <Zap size={18} className="text-[#F5A623]" />
                   <span className="text-sm font-semibold text-[#0D2B45]">Potência Total do Sistema</span>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <span className="text-2xl font-bold text-[#1E88E5]">
                     {results.totalPowerWp >= 1000 ?`${totalPowerKwp.toFixed(2)} kWp` : `${results.totalPowerWp.toFixed(0)} Wp`}
                   </span>
@@ -341,7 +341,7 @@ export default function TabEspacamento() {
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+              <div className="grid grid-cols-1 gap-x-8 gap-y-4 text-sm sm:grid-cols-2 md:grid-cols-3">
                 <div>
                   <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Painel</div>
                   <div className="space-y-1">

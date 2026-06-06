@@ -403,7 +403,7 @@ export default function TabMapa({ isActive = false }: TabMapaProps) {
           {/* ── SECTION: Modo ── */}
           <div className="border-b px-3 py-2.5 bg-slate-50">
             <Label className="text-[10px] font-bold text-[#0D2B45] uppercase tracking-wider block mb-1.5">Modo</Label>
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
               {MODE_DEFS.map(m => (
                 <button key={m.key} type="button"
                   onClick={() => changeMode(m.key)}
@@ -510,7 +510,7 @@ export default function TabMapa({ isActive = false }: TabMapaProps) {
                 <Layers size={11} className="text-[#1E88E5]" /> Camadas
               </span>
             </div>
-            <div className="px-3 py-2 grid grid-cols-2 gap-1.5">
+            <div className="px-3 py-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
               {LAYER_DEFS.map(ld => (
                 <button key={ld.key} type="button" onClick={() => toggleLayer(ld.key)}
                   className={cn(
@@ -594,7 +594,7 @@ export default function TabMapa({ isActive = false }: TabMapaProps) {
                             className="h-7 text-xs mt-0.5" />
                         </div>
                         {/* Azimuth + mount */}
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div>
                             <Label className="text-[10px] text-muted-foreground">Azimute (°)</Label>
                             <Input type="number"
@@ -616,7 +616,7 @@ export default function TabMapa({ isActive = false }: TabMapaProps) {
                           </div>
                         </div>
                         {/* Panel dims */}
-                        <div className="grid grid-cols-3 gap-1.5">
+                        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">
                           {([
                             { label: "Larg (m)", key: "panelW" as const, step: "0.01" },
                             { label: "Alt (m)",  key: "panelH" as const, step: "0.01" },
@@ -692,7 +692,7 @@ export default function TabMapa({ isActive = false }: TabMapaProps) {
           {areas.length > 0 && (
             <div className="px-4 py-4 space-y-2">
               <Label className="text-[10px] font-bold text-[#0D2B45] uppercase tracking-wider">Total do projeto</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="bg-[#0D2B45] rounded-xl px-3 py-3 text-center">
                   <div className="text-2xl font-extrabold text-white tabular-nums">{totalPanels}</div>
                   <div className="text-[9px] text-blue-300 font-semibold uppercase tracking-wider mt-0.5">Painéis</div>

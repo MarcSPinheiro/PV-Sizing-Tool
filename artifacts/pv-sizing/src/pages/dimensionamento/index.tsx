@@ -7,8 +7,8 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-4 p-4">
       <Skeleton className="h-8 w-64" />
-      <Skeleton className="h-4 w-96" />
-      <div className="mt-6 grid grid-cols-3 gap-4">
+      <Skeleton className="h-4 w-full max-w-96" />
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Skeleton className="h-32" />
         <Skeleton className="h-32" />
         <Skeleton className="h-32" />
@@ -21,7 +21,7 @@ export default function DimensionamentoPage() {
   return (
     <div className="space-y-0">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-[#0D2B45]">
+        <h1 className="text-2xl font-bold tracking-tight text-[#0D2B45] sm:text-3xl">
           Dimensionamento FV
         </h1>
         <p className="mt-1 text-muted-foreground">

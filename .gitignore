@@ -56,3 +56,6 @@ Thumbs.db
 *.backup.tsx
 *.backup*.ts
 *.backup*.tsx
+
+# Local build checks
+artifacts/pv-sizing/dist-mobile-check*/
