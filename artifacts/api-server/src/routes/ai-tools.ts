@@ -41,6 +41,22 @@ function handleAiError(res: { status: (code: number) => { json: (body: unknown) 
   res.status(Number.isFinite(status) ? status : 502).json({ error: message || fallback });
 }
 
+function withAiTimeout<T>(promise: Promise<T>, timeoutMs = 90_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(Object.assign(
+        new Error("A IA demorou demasiado tempo a responder. Tente novamente com um ficheiro mais pequeno ou converta o PDF para imagem."),
+        { status: 504 },
+      ));
+    }, timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(timer));
+  });
+}
+
 // ── File upload (memory, 10 MB, MIME filter) ──────────────────────────────────
 const ALLOWED_MIMES = [
   "application/pdf",
@@ -487,7 +503,7 @@ router.post(
       const base64 = buffer.toString("base64");
       const contentBlock = buildFileBlock(isPdf, mimetype, base64);
 
-      const message = await getAnthropicClient(req).messages.create({
+      const message = await withAiTimeout(getAnthropicClient(req).messages.create({
         model: AI_MODEL,
         max_tokens: 4096,
         messages: [
@@ -552,7 +568,7 @@ Devolve APENAS este JSON (sem texto adicional, sem markdown):
             ],
           },
         ],
-      });
+      }));
 
       const text =
         message.content[0].type === "text" ? message.content[0].text : "{}";
@@ -577,7 +593,7 @@ router.post(
     }
 
     try {
-      const message = await getAnthropicClient(req).messages.create({
+      const message = await withAiTimeout(getAnthropicClient(req).messages.create({
         model: AI_MODEL,
         max_tokens: 1536,
         messages: [
@@ -615,7 +631,7 @@ Texto da fatura:
 ${parsed.data.texto}`,
           },
         ],
-      });
+      }));
 
       const text = message.content[0].type === "text" ? message.content[0].text : "{}";
       res.json(parseAiJsonObject(text));
@@ -919,7 +935,7 @@ router.post(
     };
 
     try {
-      const message = await getAnthropicClient(req).messages.create({
+      const message = await withAiTimeout(getAnthropicClient(req).messages.create({
         model: AI_MODEL,
         max_tokens: 2048,
         messages: [
@@ -947,7 +963,7 @@ Dados:
 ${texto}`,
           },
         ],
-      });
+      }));
 
       const text = message.content[0].type === "text" ? message.content[0].text : "{}";
       const result = JSON.parse(cleanAiJson(text)) as {
@@ -1019,7 +1035,7 @@ router.post(
       const base64 = buffer.toString("base64");
       const contentBlock = buildFileBlock(isPdf, mimetype, base64);
 
-      const message = await getAnthropicClient(req).messages.create({
+      const message = await withAiTimeout(getAnthropicClient(req).messages.create({
         model: AI_MODEL,
         max_tokens: 4096,
         messages: [
@@ -1057,7 +1073,7 @@ Responde APENAS com o JSON pedido, sem texto adicional, sem markdown.`,
             ],
           },
         ],
-      });
+      }));
 
       const text =
         message.content[0].type === "text" ? message.content[0].text : "{}";

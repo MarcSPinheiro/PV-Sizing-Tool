@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Loader2, Sparkles, RefreshCw, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAiHeaders } from "@/lib/ai-key";
+import { fetchWithTimeout, validateAiUpload } from "@/lib/ai-upload";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -95,10 +96,11 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
     setIsLoading(true);
     reset();
     try {
+      validateAiUpload(file);
       const fd = new FormData();
       fd.append("file", file);
       fd.append("tipoEquipamento", tipoEquipamento);
-      const resp = await fetch(`${BASE}/api/tools/import-datasheet`, { method: "POST", headers: getAiHeaders(), body: fd });
+      const resp = await fetchWithTimeout(`${BASE}/api/tools/import-datasheet`, { method: "POST", headers: getAiHeaders(), body: fd });
       if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar ficha técnica"));
       const r: DatasheetResult = await resp.json();
       applyResult(r);
@@ -140,7 +142,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
     setIsLoading(true);
     reset();
     try {
-      const resp = await fetch(`${BASE}/api/tools/import-datasheet-text`, {
+      const resp = await fetchWithTimeout(`${BASE}/api/tools/import-datasheet-text`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAiHeaders() },
         body: JSON.stringify({ tipoEquipamento, texto: textInput }),

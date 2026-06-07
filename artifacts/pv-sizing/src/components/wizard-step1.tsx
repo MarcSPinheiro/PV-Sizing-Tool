@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAiHeaders } from "@/lib/ai-key";
+import { fetchWithTimeout, normalizeAiUploadError, validateAiUpload } from "@/lib/ai-upload";
 import MonthlyHistoryGrid, { type MesOrigem } from "@/components/monthly-history-grid";
 import TariffPeriodEditor from "@/components/tariff-period-editor";
 import ConfidenceIndicator, { calcConfidence } from "@/components/confidence-indicator";
@@ -357,18 +358,19 @@ export default function WizardStep1({ data, onChange }: Props) {
     const id = Math.random().toString(36).slice(2);
     setInvoices(prev => [...prev, { id, fileName: file.name, status: "parsing" }]);
     try {
+      validateAiUpload(file);
       const aiHeaders = getAiHeaders();
       if (!("x-anthropic-api-key" in aiHeaders)) {
         throw new Error("Adicione a chave de IA nas Definições da Empresa antes de carregar faturas.");
       }
       const fd = new FormData();
       fd.append("file", file);
-      const resp = await fetch(`${BASE}/api/tools/parse-invoice`, { method: "POST", headers: aiHeaders, body: fd });
+      const resp = await fetchWithTimeout(`${BASE}/api/tools/parse-invoice`, { method: "POST", headers: aiHeaders, body: fd });
       if (!resp.ok) throw new Error(await readApiError(resp));
       const invData: InvoiceData = await resp.json();
       setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "done", data: invData } : i));
     } catch (err) {
-      const message = err instanceof Error ?err.message : "Erro ao processar fatura";
+      const message = normalizeAiUploadError(err, "Erro ao processar fatura");
       setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "error", error: message } : i));
       toast({ title: `Erro ao processar ${file.name}`, description: message, variant: "destructive" });
     }
@@ -392,7 +394,7 @@ export default function WizardStep1({ data, onChange }: Props) {
     setIsParsingText(true);
     setInvoices(prev => [...prev, { id, fileName: "Texto da fatura", status: "parsing" }]);
     try {
-      const resp = await fetch(`${BASE}/api/tools/parse-invoice-text`, {
+      const resp = await fetchWithTimeout(`${BASE}/api/tools/parse-invoice-text`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAiHeaders() },
         body: JSON.stringify({ texto: invoiceText }),
@@ -402,7 +404,7 @@ export default function WizardStep1({ data, onChange }: Props) {
       setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "done", data: invData } : i));
       toast({ title: "Texto da fatura analisado com IA" });
     } catch (err) {
-      const message = err instanceof Error ?err.message : "Erro ao analisar texto da fatura";
+      const message = normalizeAiUploadError(err, "Erro ao analisar texto da fatura");
       setInvoices(prev => prev.map(i => i.id === id ?{ ...i, status: "error", error: message } : i));
       toast({ title: "Erro ao analisar texto da fatura", description: message, variant: "destructive" });
     } finally {
