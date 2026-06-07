@@ -78,8 +78,11 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
     const items: ModeloItem[] = (r.modelos ??[r.dados]).map(d => ({ dados: d, selecionado: true }));
     setModelos(items);
 
-    if (items.length === 1) {
+    if (items.length > 0) {
       onExtracted(items[0].dados);
+    }
+
+    if (items.length === 1) {
       toast({
         title: `Dados extraídos (${(r.confianca * 100).toFixed(0)}% confiança)`,
         description: r.notas ??"Dados pré-preenchidos no formulário abaixo.",

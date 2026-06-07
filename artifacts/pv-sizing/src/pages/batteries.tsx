@@ -51,6 +51,70 @@ import { DatasheetImport } from "@/components/datasheet-import";
 
 const TECNOLOGIAS = ["LiFePO4", "Li-ion", "AGM", "Gel"] as const;
 
+function firstText(data: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return "";
+}
+
+function firstNumber(data: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const raw = data[key];
+    if (raw == null || raw === "") continue;
+    const normalized = typeof raw === "string"
+      ? raw.replace(",", ".").replace(/[^\d.-]/g, "")
+      : raw;
+    const value = Number(normalized);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return 0;
+}
+
+function normalizeTechnology(value: unknown): BatteryFormValues["tecnologia"] | null {
+  const text = String(value ?? "").trim().toLowerCase();
+  if (!text) return null;
+  if (text.includes("lifepo") || text.includes("lfp") || text.includes("ferro")) return "LiFePO4";
+  if (text.includes("li-ion") || text.includes("li ion") || text.includes("lithium") || text.includes("litio") || text.includes("lítio")) return "Li-ion";
+  if (text.includes("agm")) return "AGM";
+  if (text.includes("gel")) return "Gel";
+  return TECNOLOGIAS.includes(value as BatteryFormValues["tecnologia"])
+    ? (value as BatteryFormValues["tecnologia"])
+    : null;
+}
+
+function normalizeBatteryImport(data: Record<string, unknown>, fallback: BatteryFormValues): BatteryFormValues {
+  return {
+    nome: firstText(data, ["nome", "modelo", "model", "referencia", "referência"]) || fallback.nome,
+    fabricante: firstText(data, ["fabricante", "marca", "manufacturer", "brand"]) || fallback.fabricante,
+    capacidade: firstNumber(data, [
+      "capacidade",
+      "capacidadeKwh",
+      "capacidadeNominal",
+      "capacidadeTotal",
+      "energia",
+      "energiaNominal",
+      "capacity",
+      "capacityKwh",
+      "nominalCapacity",
+    ]) || fallback.capacidade,
+    tensao: firstNumber(data, [
+      "tensao",
+      "tensão",
+      "tensaoNominal",
+      "tensãoNominal",
+      "voltagem",
+      "voltage",
+      "nominalVoltage",
+    ]) || fallback.tensao,
+    tecnologia: normalizeTechnology(
+      data.tecnologia ?? data.quimica ?? data.química ?? data.chemistry ?? data.tipo,
+    ) ?? fallback.tecnologia,
+  };
+}
+
 const batterySchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
   fabricante: z.string().min(1, "Fabricante é obrigatório"),
@@ -150,30 +214,21 @@ export default function Batteries() {
             tipoEquipamento="bateria"
             onExtracted={(data) => {
               const cur = form.getValues();
-              form.reset({
-                nome:        data.nome        ? String(data.nome)        : cur.nome,
-                fabricante:  data.fabricante  ? String(data.fabricante)  : cur.fabricante,
-                capacidade:  Number(data.capacidade) > 0 ? Number(data.capacidade) : cur.capacidade,
-                tensao:      Number(data.tensao)      > 0 ? Number(data.tensao)      : cur.tensao,
-                tecnologia:  TECNOLOGIAS.includes(data.tecnologia as typeof TECNOLOGIAS[number])
-                               ? (data.tecnologia as typeof TECNOLOGIAS[number])
-                               : cur.tecnologia,
-              });
+              form.reset(normalizeBatteryImport(data, cur));
             }}
             onBatchCreate={async (modelos) => {
               let ok = 0;
               for (const d of modelos) {
-                const tec = TECNOLOGIAS.includes(d.tecnologia as typeof TECNOLOGIAS[number])
-                  ? (d.tecnologia as typeof TECNOLOGIAS[number])
-                  : "LiFePO4";
+                const normalized = normalizeBatteryImport(d, {
+                  nome: "",
+                  fabricante: "",
+                  capacidade: 0,
+                  tensao: 48,
+                  tecnologia: "LiFePO4",
+                });
                 try {
-                  await createBattery.mutateAsync({ data: {
-                    nome: String(d.nome ?? ""),
-                    fabricante: String(d.fabricante ?? ""),
-                    capacidade: Number(d.capacidade ?? 0),
-                    tensao: Number(d.tensao ?? 48),
-                    tecnologia: tec,
-                  }});
+                  if (!normalized.nome || !normalized.fabricante || normalized.capacidade <= 0) continue;
+                  await createBattery.mutateAsync({ data: normalized });
                   ok++;
                 } catch { /* skip failed */ }
               }
