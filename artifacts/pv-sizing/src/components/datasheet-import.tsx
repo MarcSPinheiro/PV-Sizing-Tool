@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+﻿import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,23 +42,27 @@ async function readErrorMessage(resp: Response, fallback: string) {
 }
 
 function modelLabel(tipo: TipoEquipamento, d: Record<string, unknown>): string {
-  const nome = String(d.nome ??"—");
+  const nome = String(d.nome ??"â€”");
   if (tipo === "inversor") {
     const kw = d.potenciaAc ?`${(Number(d.potenciaAc) / 1000).toFixed(1)} kW AC` : "";
     const mppt = d.numMppt ?`${d.numMppt} MPPT` : "";
-    return [nome, kw, mppt].filter(Boolean).join(" · ");
+    return [nome, kw, mppt].filter(Boolean).join(" Â· ");
   }
   if (tipo === "painel") {
     const wp = d.potencia ?`${d.potencia} Wp` : "";
     const voc = d.voc ?`Voc ${d.voc} V` : "";
-    return [nome, wp, voc].filter(Boolean).join(" · ");
+    return [nome, wp, voc].filter(Boolean).join(" Â· ");
   }
   if (tipo === "bateria") {
     const kwh = d.capacidade ?`${d.capacidade} kWh` : "";
     const v   = d.tensao ?`${d.tensao} V` : "";
-    return [nome, kwh, v, String(d.tecnologia ??"")].filter(Boolean).join(" · ");
+    return [nome, kwh, v, String(d.tecnologia ??"")].filter(Boolean).join(" Â· ");
   }
   return nome;
+}
+
+function modelName(d: Record<string, unknown>): string {
+  return String(d.nome ?? d.modelo ?? d.model ?? d.referencia ?? d.reference ?? "Modelo detetado");
 }
 
 export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }: Props) {
@@ -84,12 +88,12 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
 
     if (items.length === 1) {
       toast({
-        title: `Dados extraídos (${(r.confianca * 100).toFixed(0)}% confiança)`,
-        description: r.notas ??"Dados pré-preenchidos no formulário abaixo.",
+        title: `Dados extraÃ­dos (${(r.confianca * 100).toFixed(0)}% confianÃ§a)`,
+        description: r.notas ??"Dados prÃ©-preenchidos no formulÃ¡rio abaixo.",
       });
     } else {
       toast({
-        title: `${items.length} modelo(s) detetado(s) · ${(r.confianca * 100).toFixed(0)}% confiança`,
+        title: `${items.length} modelo(s) detetado(s) Â· ${(r.confianca * 100).toFixed(0)}% confianÃ§a`,
         description: r.notas ??"Selecione os modelos a criar.",
       });
     }
@@ -104,7 +108,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
       fd.append("file", file);
       fd.append("tipoEquipamento", tipoEquipamento);
       const resp = await fetchWithTimeout(`${BASE}/api/tools/import-datasheet`, { method: "POST", headers: getAiHeaders(), body: fd });
-      if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar ficha técnica"));
+      if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar ficha tÃ©cnica"));
       const r: DatasheetResult = await resp.json();
       applyResult(r);
       return;
@@ -115,17 +119,17 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
       if (items.length === 1 && !onBatchCreate) {
         onExtracted(items[0].dados);
         toast({
-          title: `Ficha técnica extraída (${(r.confianca * 100).toFixed(0)}% confiança)`,
-          description: r.notas ??"Dados pré-preenchidos no formulário abaixo.",
+          title: `Ficha tÃ©cnica extraÃ­da (${(r.confianca * 100).toFixed(0)}% confianÃ§a)`,
+          description: r.notas ??"Dados prÃ©-preenchidos no formulÃ¡rio abaixo.",
         });
       } else {
         toast({
-          title: `${items.length} modelo(s) detetado(s) · ${(r.confianca * 100).toFixed(0)}% confiança`,
+          title: `${items.length} modelo(s) detetado(s) Â· ${(r.confianca * 100).toFixed(0)}% confianÃ§a`,
           description: r.notas ??"Selecione os modelos a criar.",
         });
       }
     } catch {
-      toast({ title: "Erro ao processar ficha técnica", variant: "destructive" });
+      toast({ title: "Erro ao processar ficha tÃ©cnica", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +143,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
 
   const handleTextImport = async () => {
     if (textInput.trim().length < 10) {
-      toast({ title: "Cole o modelo ou especificações primeiro", variant: "destructive" });
+      toast({ title: "Cole o modelo ou especificaÃ§Ãµes primeiro", variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -204,7 +208,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         {isLoading ?(
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Loader2 size={18} className="animate-spin text-primary" />
-            <span className="text-sm">A analisar ficha técnica com IA… a detetar modelos…</span>
+            <span className="text-sm">A analisar ficha tÃ©cnica com IAâ€¦ a detetar modelosâ€¦</span>
           </div>
         ) : result ?(
           <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
@@ -212,7 +216,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
             <span className="text-sm font-medium">
               {modelos.length} modelo(s) detetado(s)
             </span>
-            <Badge variant="secondary">{(result.confianca * 100).toFixed(0)}% confiança</Badge>
+            <Badge variant="secondary">{(result.confianca * 100).toFixed(0)}% confianÃ§a</Badge>
             <button
               className="ml-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
               onClick={e => { e.stopPropagation(); reset(); }}
@@ -224,8 +228,8 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Sparkles size={18} className="text-primary" />
             <div className="text-sm">
-              <span className="font-medium">Importar ficha técnica com IA</span>
-              <span className="text-muted-foreground"> · PDF ou imagem · deteta todos os modelos automaticamente</span>
+              <span className="font-medium">Importar ficha tÃ©cnica com IA</span>
+              <span className="text-muted-foreground"> Â· PDF ou imagem Â· deteta todos os modelos automaticamente</span>
             </div>
             <Upload size={15} className="text-muted-foreground" />
           </div>
@@ -247,7 +251,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         <Textarea
           value={textInput}
           onChange={(event) => setTextInput(event.target.value)}
-          placeholder={`Cole aqui o modelo ou dados técnicos do ${tipoLabel}.`}
+          placeholder={`Cole aqui o modelo ou dados tÃ©cnicos do ${tipoLabel}.`}
           rows={3}
         />
         <div className="flex justify-end">
@@ -264,6 +268,30 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         </div>
       </div>
 
+      {onBatchCreate && result && modelos.length > 1 && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold">{modelos.length} modelo(s) detetado(s)</p>
+              <p className="text-xs text-muted-foreground">
+                {selectedCount} selecionado(s). Revise a lista abaixo ou crie todos agora.
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleBatchCreate}
+              disabled={isBatchCreating || selectedCount === 0}
+              className="w-full sm:w-auto"
+            >
+              {isBatchCreating
+                ? <><Loader2 size={14} className="mr-1.5 animate-spin" />A criar...</>
+                : <><CheckCircle2 size={14} className="mr-1.5" />Criar {selectedCount} {tipoLabel}(s)</>}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Multi-model review panel */}
       {result && modelos.length > 0 && (modelos.length > 1 || onBatchCreate) && (
         <div className="border rounded-lg overflow-hidden">
@@ -276,7 +304,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
               <Sparkles size={14} className="text-primary" />
               {modelos.length} modelo(s) encontrado(s)
               {result.notas && (
-                <span className="text-xs text-muted-foreground font-normal">· {result.notas}</span>
+                <span className="text-xs text-muted-foreground font-normal">Â· {result.notas}</span>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -291,7 +319,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
               {modelos.length > 1 && (
                 <div className="flex items-center gap-3 px-3 py-1.5 border-b bg-background text-xs text-muted-foreground">
                   <button className="hover:text-foreground" onClick={() => toggleAll(true)}>Selecionar todos</button>
-                  <span>·</span>
+                  <span>Â·</span>
                   <button className="hover:text-foreground" onClick={() => toggleAll(false)}>Desselecionar todos</button>
                 </div>
               )}
@@ -313,7 +341,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
                       onClick={e => e.stopPropagation()}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{String(m.dados.nome ??"—")}</p>
+                      <p className="text-sm font-medium truncate">{modelName(m.dados)}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {modelLabel(tipoEquipamento, m.dados)}
                       </p>
@@ -332,7 +360,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
                     disabled={isBatchCreating || selectedCount === 0}
                   >
                     {isBatchCreating
-                      ?<><Loader2 size={14} className="mr-1.5 animate-spin" />A criar…</>
+                      ?<><Loader2 size={14} className="mr-1.5 animate-spin" />A criarâ€¦</>
                       : <><CheckCircle2 size={14} className="mr-1.5" />Criar {selectedCount} {tipoLabel}(s)</>}
                   </Button>
                 )}
@@ -343,12 +371,12 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
                     const first = modelos.find(m => m.selecionado);
                     if (first) {
                       onExtracted(first.dados);
-                      toast({ title: "Dados pré-preenchidos no formulário" });
+                      toast({ title: "Dados prÃ©-preenchidos no formulÃ¡rio" });
                     }
                   }}
                   disabled={selectedCount === 0}
                 >
-                  Pré-preencher formulário (1.º)
+                  PrÃ©-preencher formulÃ¡rio (1.Âº)
                 </Button>
               </div>
             </>
@@ -360,9 +388,10 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
       {result && result.confianca < 0.6 && (
         <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
           <AlertCircle size={13} />
-          Confiança baixa ({(result.confianca * 100).toFixed(0)}%). Verifique os valores antes de guardar.
+          ConfianÃ§a baixa ({(result.confianca * 100).toFixed(0)}%). Verifique os valores antes de guardar.
         </div>
       )}
     </div>
   );
 }
+
