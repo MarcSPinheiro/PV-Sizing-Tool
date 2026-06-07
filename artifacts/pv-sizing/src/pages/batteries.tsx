@@ -209,35 +209,6 @@ export default function Batteries() {
   const BatteryForm = ({ isEdit = false }: { isEdit?: boolean }) => (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {!isEdit && (
-          <DatasheetImport
-            tipoEquipamento="bateria"
-            onExtracted={(data) => {
-              const cur = form.getValues();
-              form.reset(normalizeBatteryImport(data, cur));
-            }}
-            onBatchCreate={async (modelos) => {
-              let ok = 0;
-              for (const d of modelos) {
-                const normalized = normalizeBatteryImport(d, {
-                  nome: "",
-                  fabricante: "",
-                  capacidade: 0,
-                  tensao: 48,
-                  tecnologia: "LiFePO4",
-                });
-                try {
-                  if (!normalized.nome || !normalized.fabricante || normalized.capacidade <= 0) continue;
-                  await createBattery.mutateAsync({ data: normalized });
-                  ok++;
-                } catch { /* skip failed */ }
-              }
-              queryClient.invalidateQueries({ queryKey: getListBatteriesQueryKey() });
-              toast({ title: `${ok} bateria(s) criada(s) com sucesso` });
-              if (ok > 0) { setIsCreateOpen(false); form.reset(); }
-            }}
-          />
-        )}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField control={form.control} name="fabricante" render={({ field }) => (
             <FormItem><FormLabel>Fabricante</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -295,6 +266,38 @@ export default function Batteries() {
             <DialogHeader>
               <DialogTitle>Nova Bateria</DialogTitle>
             </DialogHeader>
+            <DatasheetImport
+              tipoEquipamento="bateria"
+              onExtracted={(data) => {
+                const cur = form.getValues();
+                form.reset(normalizeBatteryImport(data, cur));
+              }}
+              onBatchCreate={async (modelos) => {
+                let ok = 0;
+                for (const d of modelos) {
+                  const normalized = normalizeBatteryImport(d, {
+                    nome: "",
+                    fabricante: "",
+                    capacidade: 0,
+                    tensao: 48,
+                    tecnologia: "LiFePO4",
+                  });
+                  try {
+                    if (!normalized.nome || !normalized.fabricante || normalized.capacidade <= 0) continue;
+                    await createBattery.mutateAsync({ data: normalized });
+                    ok++;
+                  } catch {
+                    /* skip failed */
+                  }
+                }
+                queryClient.invalidateQueries({ queryKey: getListBatteriesQueryKey() });
+                toast({ title: `${ok} bateria(s) criada(s) com sucesso` });
+                if (ok > 0) {
+                  setIsCreateOpen(false);
+                  form.reset();
+                }
+              }}
+            />
             <BatteryForm />
           </DialogContent>
         </Dialog>
