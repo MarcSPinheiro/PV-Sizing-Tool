@@ -96,7 +96,7 @@ export function calcBatteryStudy(
   let excedenteTotalAnual = 0;  // instantaneous solar surplus (before battery)
   let armazenadoAnual     = 0;  // energy stored in battery (annual)
   let entregueAnual       = 0;  // energy delivered from battery to loads (annual)
-  let soc                 = 0;  // state-of-charge carried across the simulated year
+  let soc                 = sys.utilCap;  // start in steady-state instead of penalising January with an empty battery
   const ganhoMensal: number[] = [];
   const armazenadoMensal: number[] = [];
   const entregueMensal: number[] = [];
