@@ -96,6 +96,7 @@ export function calcBatteryStudy(
   let excedenteTotalAnual = 0;  // instantaneous solar surplus (before battery)
   let armazenadoAnual     = 0;  // energy stored in battery (annual)
   let entregueAnual       = 0;  // energy delivered from battery to loads (annual)
+  let soc                 = 0;  // state-of-charge carried across the simulated year
   const ganhoMensal: number[] = [];
   const armazenadoMensal: number[] = [];
   const entregueMensal: number[] = [];
@@ -107,8 +108,9 @@ export function calcBatteryStudy(
     const autoconsumoDiretoMes = Math.min(cenario.autoconsumoMensal[m] ?? 0, consumoMes);
     const consumoRestanteMes = Math.max(0, consumoMes - autoconsumoDiretoMes);
     const producaoMes = (cenario.autoconsumoMensal[m] ?? 0) + (cenario.excessoMensal[m] ?? 0);
-    const producaoDia = producaoMes / DIAS_MES[m];
-    const consumoDia  = cenario.consumoMensal[m] / DIAS_MES[m];
+    const diasMes = DIAS_MES[m];
+    const producaoDia = producaoMes / diasMes;
+    const consumoDia  = consumoMes / diasMes;
 
     // Hourly solar production and consumption (kWh per hour)
     const solar   = SOLAR_FRACS.map(f => f * producaoDia);
@@ -118,32 +120,37 @@ export function calcBatteryStudy(
     const excedente = solar.map((s, h) => Math.max(0, s - consumo[h]));
     const deficit   = solar.map((s, h) => Math.max(0, consumo[h] - s));
 
-    excedenteTotalAnual += excedente.reduce((a, b) => a + b, 0) * DIAS_MES[m];
+    excedenteTotalAnual += excedente.reduce((a, b) => a + b, 0) * diasMes;
 
     // ── One-day battery simulation (hourly forward pass) ─────────────────────
-    let soc = 0;           // state-of-charge in kWh (battery starts empty)
-    let armazenadoDia = 0;
-    let entregouDia   = 0;
+    let armazenadoMes = 0;
+    let entregueMes = 0;
+    let excedenteRestanteMes = 0;
 
-    for (let h = 0; h < 24; h++) {
-      // Charge: limited by charger power, remaining capacity, and surplus
-      if (excedente[h] > 0 && soc < sys.utilCap) {
-        const space  = sys.utilCap - soc;
-        const charge = Math.min(excedente[h], maxCarga, space / ETA);
-        soc          += charge * ETA;
-        armazenadoDia += charge;
-      }
-      // Discharge: limited by inverter/battery power and SOC
-      if (deficit[h] > 0 && soc > 0) {
-        const draw   = Math.min(deficit[h] / ETA, maxDesc / ETA, soc);
-        soc         -= draw;
-        entregouDia += draw * ETA;
+    for (let d = 0; d < diasMes; d++) {
+      for (let h = 0; h < 24; h++) {
+        let exportHour = excedente[h];
+
+        if (exportHour > 0 && soc < sys.utilCap) {
+          const space  = Math.max(0, sys.utilCap - soc);
+          const charge = Math.min(exportHour, maxCarga, space / ETA);
+          soc          += charge * ETA;
+          armazenadoMes += charge;
+          exportHour   -= charge;
+        }
+
+        excedenteRestanteMes += Math.max(0, exportHour);
+
+        if (deficit[h] > 0 && soc > 0) {
+          const draw      = Math.min(deficit[h] / ETA, maxDesc / ETA, soc);
+          const delivered = draw * ETA;
+          soc            -= draw;
+          entregueMes    += delivered;
+        }
       }
     }
 
-    const armazenadoMes = armazenadoDia * DIAS_MES[m];
-    const entregueMes = Math.min(entregouDia * DIAS_MES[m], consumoRestanteMes);
-    const excedenteRestanteMes = Math.max(0, (cenario.excessoMensal[m] ?? 0) - armazenadoMes);
+    entregueMes = Math.min(entregueMes, consumoRestanteMes);
 
     armazenadoAnual += armazenadoMes;
     entregueAnual   += entregueMes;
