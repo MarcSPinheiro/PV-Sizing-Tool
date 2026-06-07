@@ -1,10 +1,19 @@
-﻿import { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, Loader2, Sparkles, RefreshCw, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  RefreshCw,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAiHeaders } from "@/lib/ai-key";
 import { fetchWithTimeout, validateAiUpload } from "@/lib/ai-upload";
@@ -15,8 +24,8 @@ type TipoEquipamento = "painel" | "inversor" | "bateria";
 
 interface DatasheetResult {
   tipoEquipamento: TipoEquipamento;
-  modelos: Record<string, unknown>[];
-  dados: Record<string, unknown>;
+  modelos?: Record<string, unknown>[];
+  dados?: Record<string, unknown>;
   confianca: number;
   notas?: string | null;
 }
@@ -41,62 +50,137 @@ async function readErrorMessage(resp: Response, fallback: string) {
   }
 }
 
-function modelLabel(tipo: TipoEquipamento, d: Record<string, unknown>): string {
-  const nome = String(d.nome ??"â€”");
-  if (tipo === "inversor") {
-    const kw = d.potenciaAc ?`${(Number(d.potenciaAc) / 1000).toFixed(1)} kW AC` : "";
-    const mppt = d.numMppt ?`${d.numMppt} MPPT` : "";
-    return [nome, kw, mppt].filter(Boolean).join(" Â· ");
+function firstText(d: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = d[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
   }
-  if (tipo === "painel") {
-    const wp = d.potencia ?`${d.potencia} Wp` : "";
-    const voc = d.voc ?`Voc ${d.voc} V` : "";
-    return [nome, wp, voc].filter(Boolean).join(" Â· ");
-  }
-  if (tipo === "bateria") {
-    const kwh = d.capacidade ?`${d.capacidade} kWh` : "";
-    const v   = d.tensao ?`${d.tensao} V` : "";
-    return [nome, kwh, v, String(d.tecnologia ??"")].filter(Boolean).join(" Â· ");
-  }
-  return nome;
+  return "";
 }
 
-function modelName(d: Record<string, unknown>): string {
-  return String(d.nome ?? d.modelo ?? d.model ?? d.referencia ?? d.reference ?? "Modelo detetado");
+function firstNumber(d: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = d[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const parsed = Number(value.replace(",", ".").replace(/[^\d.-]/g, ""));
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return undefined;
+}
+
+function modelName(d: Record<string, unknown>) {
+  return (
+    firstText(d, ["nome", "modelo", "model", "referencia", "reference", "name"]) ||
+    "Modelo detetado"
+  );
+}
+
+function modelLabel(tipo: TipoEquipamento, d: Record<string, unknown>) {
+  const nome = modelName(d);
+
+  if (tipo === "inversor") {
+    const potenciaAc = firstNumber(d, ["potenciaAc", "potencia_ac", "acPower", "powerAc"]);
+    const mppt = firstNumber(d, ["numMppt", "mppt", "mppts", "numeroMppt"]);
+    return [
+      nome,
+      potenciaAc ? `${(potenciaAc / 1000).toFixed(1)} kW AC` : "",
+      mppt ? `${mppt} MPPT` : "",
+    ]
+      .filter(Boolean)
+      .join(" - ");
+  }
+
+  if (tipo === "painel") {
+    const potencia = firstNumber(d, ["potencia", "wp", "potenciaWp", "power"]);
+    const voc = firstNumber(d, ["voc", "Voc", "openCircuitVoltage"]);
+    return [
+      nome,
+      potencia ? `${potencia} Wp` : "",
+      voc ? `Voc ${voc} V` : "",
+    ]
+      .filter(Boolean)
+      .join(" - ");
+  }
+
+  const capacidade = firstNumber(d, [
+    "capacidade",
+    "capacidadeKwh",
+    "capacidadeUtil",
+    "usableCapacity",
+    "energy",
+  ]);
+  const tensao = firstNumber(d, ["tensao", "tensaoNominal", "voltagem", "voltage"]);
+  const tecnologia = firstText(d, ["tecnologia", "technology", "quimica", "chemistry"]);
+  return [
+    nome,
+    capacidade ? `${capacidade} kWh` : "",
+    tensao ? `${tensao} V` : "",
+    tecnologia,
+  ]
+    .filter(Boolean)
+    .join(" - ");
+}
+
+function pluralLabel(tipo: TipoEquipamento) {
+  if (tipo === "painel") return "painel(is)";
+  if (tipo === "inversor") return "inversor(es)";
+  return "bateria(s)";
 }
 
 export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading]           = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isBatchCreating, setIsBatchCreating] = useState(false);
-  const [result, setResult]                 = useState<DatasheetResult | null>(null);
-  const [modelos, setModelos]               = useState<ModeloItem[]>([]);
-  const [expanded, setExpanded]             = useState(true);
-  const [textInput, setTextInput]           = useState("");
+  const [result, setResult] = useState<DatasheetResult | null>(null);
+  const [modelos, setModelos] = useState<ModeloItem[]>([]);
+  const [expanded, setExpanded] = useState(true);
+  const [textInput, setTextInput] = useState("");
   const { toast } = useToast();
 
-  const reset = () => { setResult(null); setModelos([]); setExpanded(true); };
+  const tipoLabel =
+    tipoEquipamento === "painel"
+      ? "painel"
+      : tipoEquipamento === "inversor"
+        ? "inversor"
+        : "bateria";
+
+  const reset = () => {
+    setResult(null);
+    setModelos([]);
+    setExpanded(true);
+  };
 
   const applyResult = (r: DatasheetResult) => {
-    setResult(r);
-    const items: ModeloItem[] = (r.modelos ??[r.dados]).map(d => ({ dados: d, selecionado: true }));
+    const rawModels =
+      Array.isArray(r.modelos) && r.modelos.length > 0
+        ? r.modelos
+        : r.dados
+          ? [r.dados]
+          : [];
+    const items = rawModels.map((dados) => ({ dados, selecionado: true }));
+
+    setResult({ ...r, modelos: rawModels, dados: rawModels[0] ?? r.dados ?? {} });
     setModelos(items);
+    setExpanded(true);
 
     if (items.length > 0) {
       onExtracted(items[0].dados);
     }
 
-    if (items.length === 1) {
-      toast({
-        title: `Dados extraÃ­dos (${(r.confianca * 100).toFixed(0)}% confianÃ§a)`,
-        description: r.notas ??"Dados prÃ©-preenchidos no formulÃ¡rio abaixo.",
-      });
-    } else {
-      toast({
-        title: `${items.length} modelo(s) detetado(s) Â· ${(r.confianca * 100).toFixed(0)}% confianÃ§a`,
-        description: r.notas ??"Selecione os modelos a criar.",
-      });
-    }
+    toast({
+      title:
+        items.length <= 1
+          ? `Dados extraidos (${(r.confianca * 100).toFixed(0)}% confianca)`
+          : `${items.length} modelo(s) detetado(s) - ${(r.confianca * 100).toFixed(0)}% confianca`,
+      description:
+        r.notas ??
+        (items.length <= 1
+          ? "Dados pre-preenchidos no formulario abaixo."
+          : "Selecione os modelos a criar."),
+    });
   };
 
   const handleFile = async (file: File) => {
@@ -107,29 +191,23 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
       const fd = new FormData();
       fd.append("file", file);
       fd.append("tipoEquipamento", tipoEquipamento);
-      const resp = await fetchWithTimeout(`${BASE}/api/tools/import-datasheet`, { method: "POST", headers: getAiHeaders(), body: fd });
-      if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar ficha tÃ©cnica"));
-      const r: DatasheetResult = await resp.json();
-      applyResult(r);
-      return;
-      setResult(r);
-      const items: ModeloItem[] = (r.modelos ??[r.dados]).map(d => ({ dados: d, selecionado: true }));
-      setModelos(items);
 
-      if (items.length === 1 && !onBatchCreate) {
-        onExtracted(items[0].dados);
-        toast({
-          title: `Ficha tÃ©cnica extraÃ­da (${(r.confianca * 100).toFixed(0)}% confianÃ§a)`,
-          description: r.notas ??"Dados prÃ©-preenchidos no formulÃ¡rio abaixo.",
-        });
-      } else {
-        toast({
-          title: `${items.length} modelo(s) detetado(s) Â· ${(r.confianca * 100).toFixed(0)}% confianÃ§a`,
-          description: r.notas ??"Selecione os modelos a criar.",
-        });
+      const resp = await fetchWithTimeout(`${BASE}/api/tools/import-datasheet`, {
+        method: "POST",
+        headers: getAiHeaders(),
+        body: fd,
+      });
+      if (!resp.ok) {
+        throw new Error(await readErrorMessage(resp, "Erro ao processar ficha tecnica"));
       }
-    } catch {
-      toast({ title: "Erro ao processar ficha tÃ©cnica", variant: "destructive" });
+
+      applyResult(await resp.json());
+    } catch (error) {
+      toast({
+        title: "Erro ao processar ficha tecnica",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -138,14 +216,15 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file) void handleFile(file);
   };
 
   const handleTextImport = async () => {
     if (textInput.trim().length < 10) {
-      toast({ title: "Cole o modelo ou especificaÃ§Ãµes primeiro", variant: "destructive" });
+      toast({ title: "Cole o modelo ou especificacoes primeiro", variant: "destructive" });
       return;
     }
+
     setIsLoading(true);
     reset();
     try {
@@ -154,31 +233,44 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         headers: { "Content-Type": "application/json", ...getAiHeaders() },
         body: JSON.stringify({ tipoEquipamento, texto: textInput }),
       });
-      if (!resp.ok) throw new Error(await readErrorMessage(resp, "Erro ao processar texto com IA"));
-      const r: DatasheetResult = await resp.json();
-      applyResult(r);
-    } catch {
-      toast({ title: "Erro ao processar texto com IA", variant: "destructive" });
+      if (!resp.ok) {
+        throw new Error(await readErrorMessage(resp, "Erro ao processar texto com IA"));
+      }
+
+      applyResult(await resp.json());
+    } catch (error) {
+      toast({
+        title: "Erro ao processar texto com IA",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleModelo = (i: number) =>
-    setModelos(prev => prev.map((m, idx) => idx === i ?{ ...m, selecionado: !m.selecionado } : m));
+  const toggleModelo = (i: number) => {
+    setModelos((prev) =>
+      prev.map((modelo, idx) =>
+        idx === i ? { ...modelo, selecionado: !modelo.selecionado } : modelo
+      )
+    );
+  };
 
-  const toggleAll = (v: boolean) =>
-    setModelos(prev => prev.map(m => ({ ...m, selecionado: v })));
+  const toggleAll = (value: boolean) => {
+    setModelos((prev) => prev.map((modelo) => ({ ...modelo, selecionado: value })));
+  };
 
-  const selectedCount = modelos.filter(m => m.selecionado).length;
+  const selectedCount = modelos.filter((modelo) => modelo.selecionado).length;
 
   const handleBatchCreate = async () => {
     if (!onBatchCreate) return;
-    const selected = modelos.filter(m => m.selecionado).map(m => m.dados);
+    const selected = modelos.filter((modelo) => modelo.selecionado).map((modelo) => modelo.dados);
     if (selected.length === 0) {
       toast({ title: "Selecione pelo menos um modelo", variant: "destructive" });
       return;
     }
+
     setIsBatchCreating(true);
     try {
       await onBatchCreate(selected);
@@ -187,39 +279,38 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
     }
   };
 
-  const tipoLabel = tipoEquipamento === "painel" ?"painel" : tipoEquipamento === "inversor" ?"inversor" : "bateria";
-
   return (
-    <div className="space-y-3 mb-4">
-      {/* Upload zone */}
+    <div className="mb-4 space-y-3">
       <div
         className={cn(
-          "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors",
+          "cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors",
           isLoading
-            ?"border-primary/30 bg-primary/5"
+            ? "border-primary/30 bg-primary/5"
             : result
-            ?"border-green-400/50 bg-green-50/30 dark:bg-green-950/10"
-            : "border-primary/30 hover:border-primary/60 hover:bg-primary/5"
+              ? "border-green-400/50 bg-green-50/30 dark:bg-green-950/10"
+              : "border-primary/30 hover:border-primary/60 hover:bg-primary/5"
         )}
         onClick={() => !isLoading && fileInputRef.current?.click()}
         onDrop={handleDrop}
-        onDragOver={e => e.preventDefault()}
+        onDragOver={(e) => e.preventDefault()}
       >
-        {isLoading ?(
+        {isLoading ? (
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Loader2 size={18} className="animate-spin text-primary" />
-            <span className="text-sm">A analisar ficha tÃ©cnica com IAâ€¦ a detetar modelosâ€¦</span>
+            <span className="text-sm">A analisar ficha tecnica com IA e a detetar modelos...</span>
           </div>
-        ) : result ?(
-          <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
+        ) : result ? (
+          <div className="flex flex-wrap items-center justify-center gap-2 text-green-700 dark:text-green-400">
             <CheckCircle2 size={18} />
-            <span className="text-sm font-medium">
-              {modelos.length} modelo(s) detetado(s)
-            </span>
-            <Badge variant="secondary">{(result.confianca * 100).toFixed(0)}% confianÃ§a</Badge>
+            <span className="text-sm font-medium">{modelos.length} modelo(s) detetado(s)</span>
+            <Badge variant="secondary">{(result.confianca * 100).toFixed(0)}% confianca</Badge>
             <button
-              className="ml-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-              onClick={e => { e.stopPropagation(); reset(); }}
+              type="button"
+              className="ml-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.stopPropagation();
+                reset();
+              }}
             >
               <RefreshCw size={12} /> nova ficha
             </button>
@@ -228,8 +319,11 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Sparkles size={18} className="text-primary" />
             <div className="text-sm">
-              <span className="font-medium">Importar ficha tÃ©cnica com IA</span>
-              <span className="text-muted-foreground"> Â· PDF ou imagem Â· deteta todos os modelos automaticamente</span>
+              <span className="font-medium">Importar ficha tecnica com IA</span>
+              <span className="text-muted-foreground">
+                {" "}
+                - PDF ou imagem - deteta todos os modelos automaticamente
+              </span>
             </div>
             <Upload size={15} className="text-muted-foreground" />
           </div>
@@ -239,7 +333,11 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
           type="file"
           accept="application/pdf,image/*"
           className="hidden"
-          onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleFile(file);
+            e.target.value = "";
+          }}
         />
       </div>
 
@@ -251,7 +349,7 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         <Textarea
           value={textInput}
           onChange={(event) => setTextInput(event.target.value)}
-          placeholder={`Cole aqui o modelo ou dados tÃ©cnicos do ${tipoLabel}.`}
+          placeholder={`Cole aqui o modelo ou dados tecnicos do ${tipoLabel}.`}
           rows={3}
         />
         <div className="flex justify-end">
@@ -262,19 +360,23 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
             onClick={handleTextImport}
             disabled={isLoading || textInput.trim().length < 3}
           >
-            {isLoading ?<Loader2 size={14} className="mr-1.5 animate-spin" /> : <Sparkles size={14} className="mr-1.5" />}
+            {isLoading ? (
+              <Loader2 size={14} className="mr-1.5 animate-spin" />
+            ) : (
+              <Sparkles size={14} className="mr-1.5" />
+            )}
             Pesquisar / preencher com IA
           </Button>
         </div>
       </div>
 
-      {onBatchCreate && result && modelos.length > 1 && (
+      {onBatchCreate && result && modelos.length > 0 && (
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold">{modelos.length} modelo(s) detetado(s)</p>
+              <p className="text-sm font-semibold">{modelos.length} modelo(s) pronto(s)</p>
               <p className="text-xs text-muted-foreground">
-                {selectedCount} selecionado(s). Revise a lista abaixo ou crie todos agora.
+                {selectedCount} selecionado(s). Pode criar os modelos detetados de uma vez.
               </p>
             </div>
             <Button
@@ -284,99 +386,129 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
               disabled={isBatchCreating || selectedCount === 0}
               className="w-full sm:w-auto"
             >
-              {isBatchCreating
-                ? <><Loader2 size={14} className="mr-1.5 animate-spin" />A criar...</>
-                : <><CheckCircle2 size={14} className="mr-1.5" />Criar {selectedCount} {tipoLabel}(s)</>}
+              {isBatchCreating ? (
+                <>
+                  <Loader2 size={14} className="mr-1.5 animate-spin" />A criar...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={14} className="mr-1.5" />
+                  Criar {selectedCount} {pluralLabel(tipoEquipamento)}
+                </>
+              )}
             </Button>
           </div>
         </div>
       )}
 
-      {/* Multi-model review panel */}
-      {result && modelos.length > 0 && (modelos.length > 1 || onBatchCreate) && (
-        <div className="border rounded-lg overflow-hidden">
-          {/* Header */}
-          <div
-            className="flex items-center justify-between px-3 py-2 bg-muted/40 cursor-pointer select-none"
-            onClick={() => setExpanded(v => !v)}
+      {result && modelos.length > 0 && (
+        <div className="overflow-hidden rounded-lg border">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between bg-muted/40 px-3 py-2 text-left"
+            onClick={() => setExpanded((value) => !value)}
           >
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Sparkles size={14} className="text-primary" />
-              {modelos.length} modelo(s) encontrado(s)
+            <div className="flex min-w-0 items-center gap-2 text-sm font-medium">
+              <Sparkles size={14} className="shrink-0 text-primary" />
+              <span className="shrink-0">{modelos.length} modelo(s) encontrado(s)</span>
               {result.notas && (
-                <span className="text-xs text-muted-foreground font-normal">Â· {result.notas}</span>
+                <span className="truncate text-xs font-normal text-muted-foreground">
+                  - {result.notas}
+                </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <span className="text-xs text-muted-foreground">{selectedCount} selecionado(s)</span>
-              {expanded ?<ChevronUp size={14} /> : <ChevronDown size={14} />}
+              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </div>
-          </div>
+          </button>
 
           {expanded && (
             <>
-              {/* Select all / deselect all */}
               {modelos.length > 1 && (
-                <div className="flex items-center gap-3 px-3 py-1.5 border-b bg-background text-xs text-muted-foreground">
-                  <button className="hover:text-foreground" onClick={() => toggleAll(true)}>Selecionar todos</button>
-                  <span>Â·</span>
-                  <button className="hover:text-foreground" onClick={() => toggleAll(false)}>Desselecionar todos</button>
+                <div className="flex items-center gap-3 border-b bg-background px-3 py-1.5 text-xs text-muted-foreground">
+                  <button
+                    type="button"
+                    className="hover:text-foreground"
+                    onClick={() => toggleAll(true)}
+                  >
+                    Selecionar todos
+                  </button>
+                  <span>-</span>
+                  <button
+                    type="button"
+                    className="hover:text-foreground"
+                    onClick={() => toggleAll(false)}
+                  >
+                    Desselecionar todos
+                  </button>
                 </div>
               )}
 
-              {/* Model list */}
               <ul className="divide-y">
-                {modelos.map((m, i) => (
+                {modelos.map((modelo, index) => (
                   <li
-                    key={i}
+                    key={index}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/30 transition-colors",
-                      !m.selecionado && "opacity-50"
+                      "flex cursor-pointer items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/30",
+                      !modelo.selecionado && "opacity-50"
                     )}
-                    onClick={() => toggleModelo(i)}
+                    onClick={() => toggleModelo(index)}
                   >
                     <Checkbox
-                      checked={m.selecionado}
-                      onCheckedChange={() => toggleModelo(i)}
-                      onClick={e => e.stopPropagation()}
+                      checked={modelo.selecionado}
+                      onCheckedChange={() => toggleModelo(index)}
+                      onClick={(e) => e.stopPropagation()}
                     />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{modelName(m.dados)}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {modelLabel(tipoEquipamento, m.dados)}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{modelName(modelo.dados)}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {modelLabel(tipoEquipamento, modelo.dados)}
                       </p>
                     </div>
-                    {i === 0 && <Badge variant="outline" className="text-xs shrink-0">Ref.</Badge>}
+                    {index === 0 && (
+                      <Badge variant="outline" className="shrink-0 text-xs">
+                        Ref.
+                      </Badge>
+                    )}
                   </li>
                 ))}
               </ul>
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 px-3 py-2.5 border-t bg-muted/20">
+              <div className="flex flex-wrap gap-2 border-t bg-muted/20 px-3 py-2.5">
                 {onBatchCreate && (
                   <Button
+                    type="button"
                     size="sm"
                     onClick={handleBatchCreate}
                     disabled={isBatchCreating || selectedCount === 0}
                   >
-                    {isBatchCreating
-                      ?<><Loader2 size={14} className="mr-1.5 animate-spin" />A criarâ€¦</>
-                      : <><CheckCircle2 size={14} className="mr-1.5" />Criar {selectedCount} {tipoLabel}(s)</>}
+                    {isBatchCreating ? (
+                      <>
+                        <Loader2 size={14} className="mr-1.5 animate-spin" />A criar...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={14} className="mr-1.5" />
+                        Criar {selectedCount} {pluralLabel(tipoEquipamento)}
+                      </>
+                    )}
                   </Button>
                 )}
                 <Button
+                  type="button"
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    const first = modelos.find(m => m.selecionado);
+                    const first = modelos.find((modelo) => modelo.selecionado);
                     if (first) {
                       onExtracted(first.dados);
-                      toast({ title: "Dados prÃ©-preenchidos no formulÃ¡rio" });
+                      toast({ title: "Dados pre-preenchidos no formulario" });
                     }
                   }}
                   disabled={selectedCount === 0}
                 >
-                  PrÃ©-preencher formulÃ¡rio (1.Âº)
+                  Pre-preencher formulario (1.o)
                 </Button>
               </div>
             </>
@@ -384,14 +516,13 @@ export function DatasheetImport({ tipoEquipamento, onExtracted, onBatchCreate }:
         </div>
       )}
 
-      {/* Warning for zero confidence */}
       {result && result.confianca < 0.6 && (
-        <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-600 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
           <AlertCircle size={13} />
-          ConfianÃ§a baixa ({(result.confianca * 100).toFixed(0)}%). Verifique os valores antes de guardar.
+          Confianca baixa ({(result.confianca * 100).toFixed(0)}%). Verifique os valores antes
+          de guardar.
         </div>
       )}
     </div>
   );
 }
-
