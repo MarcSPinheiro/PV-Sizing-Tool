@@ -307,6 +307,10 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
   const locForm     = useForm<LocalizacaoForm>({ resolver: zodResolver(localizacaoSchema), defaultValues: { latitude: 38.7, longitude: -9.1, inclinacao: 30, azimute: 0 } });
   const equipForm   = useForm<EquipamentosForm>({ resolver: zodResolver(equipamentosSchema), defaultValues: {} });
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   // When new sizing arrives, pick recommended scenario and initialise manual from it.
   // Skip when restoring from draft (skipNextManualReset prevents overwriting user adjustments).
   useEffect(() => {
@@ -3121,6 +3125,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
       {/* Navigation */}
       <div className="sticky bottom-0 z-20 -mx-3 flex items-center justify-between gap-3 border-t border-border/50 bg-background/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pt-4">
         <Button
+          type="button"
           variant="outline"
           onClick={() => setStep(s => Math.max(1, s - 1))}
           disabled={step === 1}
@@ -3132,7 +3137,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
           {step} de {STEPS.length}
         </span>
         {step < STEPS.length ?(
-          <Button onClick={goNext} disabled={isSizing} className="min-h-11 flex-1 gap-1.5 sm:min-h-10 sm:flex-none">
+          <Button type="button" onClick={goNext} disabled={isSizing} className="min-h-11 flex-1 gap-1.5 sm:min-h-10 sm:flex-none">
             {isSizing && <Loader2 size={15} className="animate-spin" />}
             {
   step === 3
