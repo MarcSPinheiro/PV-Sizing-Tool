@@ -1024,9 +1024,9 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
     (budgetTotal != null && budgetSubtotal != null ?budgetTotal - budgetSubtotal : null);
 
   return (
-    <article id="report-content" className="report-root bg-white text-slate-950 shadow-xl print:shadow-none">
+    <article id="report-content" className="report-root w-full min-w-0 bg-white text-slate-950 shadow-xl print:shadow-none sm:w-[21cm] sm:min-w-[21cm]">
       {sections.includes("cover") && (
-        <div className="report-page flex min-h-[29.7cm] flex-col justify-between p-12">
+        <div className="report-page flex min-h-[70vh] flex-col justify-between p-5 sm:min-h-[29.7cm] sm:p-12">
           <div>
             <div className="flex items-center gap-3">
               {companyLogo ? (
@@ -1052,14 +1052,14 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
             <p className="text-xl text-slate-600">
               {text(customer?.nome) ?? text(cliente.nome) ?? "Cliente"}
             </p>
-            <div className="mx-auto grid max-w-2xl grid-cols-3 gap-4">
+            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <Metric label="Potência" value={fmt(installedKwp, 2, "kWp")} />
               <Metric label="Painéis" value={panelCount ?int(panelCount) : "-"} />
               <Metric label="Produção anual" value={int(annualEnergy, "kWh")} />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 text-sm">
+          <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3 sm:gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Data</p>
               <p className="font-semibold">{generatedAt}</p>
@@ -1078,7 +1078,7 @@ export default function ReportPreview({ sections, data }: { sections: SectionId[
         </div>
       )}
 
-      <div className="report-page min-h-[29.7cm] space-y-8 p-12">
+      <div className="report-page min-h-[70vh] space-y-6 p-5 sm:min-h-[29.7cm] sm:space-y-8 sm:p-12">
         {sections.includes("page1Client") && (
           <Section title="1. Cliente e localização">
             <div className="grid grid-cols-3 gap-6">

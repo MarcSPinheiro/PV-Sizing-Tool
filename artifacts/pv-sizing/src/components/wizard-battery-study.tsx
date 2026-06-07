@@ -431,12 +431,12 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
           )}
 
           {/* Add line */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Select value={addBatId ? String(addBatId) : ""} onValueChange={v => setAddBatId(Number(v))}>
               <SelectTrigger className="flex-1 text-sm h-9">
                 <SelectValue placeholder="Selecionar modelo…" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[70vh] touch-pan-y">
                 {batteries.map(b => (
                   <SelectItem key={b.id} value={String(b.id)}>
                     {b.fabricante} {b.nome} — {b.capacidade} kWh
@@ -444,7 +444,7 @@ export default function WizardBatteryStudy({ batteries, batteryUnits, onUnitsCha
                 ))}
               </SelectContent>
             </Select>
-            <Button type="button" size="sm" onClick={addLine} disabled={!addBatId} className="gap-1.5 shrink-0">
+            <Button type="button" size="sm" onClick={addLine} disabled={!addBatId} className="w-full gap-1.5 shrink-0 sm:w-auto">
               <Plus size={14} /> Adicionar
             </Button>
           </div>

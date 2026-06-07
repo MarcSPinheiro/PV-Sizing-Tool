@@ -229,8 +229,8 @@ export default function ReportBuilder({ projectId, draftOverride, companyOverrid
   }
 
   return (
-    <div className="report-builder flex h-full min-h-0 bg-slate-100">
-      <aside className="report-controls flex w-72 shrink-0 flex-col border-r bg-white">
+    <div className="report-builder flex min-h-full flex-col bg-slate-100 sm:h-full sm:min-h-0 sm:flex-row">
+      <aside className="report-controls flex w-full shrink-0 flex-col border-b bg-white sm:w-72 sm:border-b-0 sm:border-r">
         <div className="border-b p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Relatório profissional
@@ -262,7 +262,7 @@ export default function ReportBuilder({ projectId, draftOverride, companyOverrid
           </Select>
         </div>
 
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="max-h-56 min-h-0 sm:max-h-none sm:flex-1">
           <div className="space-y-2 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Campos no PDF
@@ -301,8 +301,8 @@ export default function ReportBuilder({ projectId, draftOverride, companyOverrid
         </div>
       </aside>
 
-      <main className="report-print-main min-h-0 flex-1 overflow-auto p-6">
-        <div className="report-print-frame mx-auto max-w-[21cm]">
+      <main className="report-print-main min-h-0 flex-1 overflow-auto p-3 sm:p-6">
+        <div className="report-print-frame mx-auto w-full max-w-[21cm]">
           <div className="mb-4 rounded-lg border bg-white p-4 print:hidden">
             <label className="mb-2 block text-sm font-semibold">Notas finais do relatório</label>
             <Textarea

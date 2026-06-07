@@ -91,7 +91,9 @@ export default function ProjectEntryCard({ onProjectReady }: Props) {
       {
         onSuccess: (p: Project) => {
           qc.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+          navigate(`${BASE || ""}/dimensionamento?projectId=${p.id}`);
           onProjectReady(p.id);
+          window.scrollTo({ top: 0, behavior: "auto" });
         },
         onError: (e) =>
           toast({ title: "Erro ao criar estudo", description: String(e), variant: "destructive" }),
@@ -212,7 +214,7 @@ export default function ProjectEntryCard({ onProjectReady }: Props) {
                           <SelectValue placeholder="Selecione um cliente…" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[70vh] touch-pan-y">
                         {(customers ?? []).length === 0 && (
                           <SelectItem value={NONE} disabled>— Crie clientes primeiro —</SelectItem>
                         )}
@@ -244,7 +246,7 @@ export default function ProjectEntryCard({ onProjectReady }: Props) {
 
                 <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-between">
                   <Button type="button" variant="outline" onClick={() => setMode("choose")} className="w-full sm:w-auto">Voltar</Button>
-                  <Button type="submit" disabled={create.isPending} data-testid="button-create-project">
+                  <Button type="submit" disabled={create.isPending} data-testid="button-create-project" className="w-full sm:w-auto">
                     {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Criar e começar
                   </Button>

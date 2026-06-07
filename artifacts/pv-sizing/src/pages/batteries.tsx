@@ -226,7 +226,7 @@ export default function Batteries() {
             <FormItem><FormLabel>Tecnologia</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-[70vh] touch-pan-y">
                   {TECNOLOGIAS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>

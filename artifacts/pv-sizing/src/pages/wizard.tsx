@@ -308,7 +308,10 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
   const equipForm   = useForm<EquipamentosForm>({ resolver: zodResolver(equipamentosSchema), defaultValues: {} });
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+      document.querySelector("main")?.scrollTo({ top: 0, behavior: "auto" });
+    });
   }, [step]);
 
   // When new sizing arrives, pick recommended scenario and initialise manual from it.
@@ -1460,7 +1463,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                         <SelectTrigger className="w-64 text-sm h-8">
                           <SelectValue placeholder="Selecionar painel…" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-[70vh] touch-pan-y">
                           {panels.map(p => (
                             <SelectItem key={p.id} value={String(p.id)}>
                               {p.fabricante} {p.nome} — {p.potencia} Wp
@@ -2262,7 +2265,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                       <FormLabel>Painel Solar *</FormLabel>
                       <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString()}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecionar painel solar..." /></SelectTrigger></FormControl>
-                        <SelectContent>
+                        <SelectContent className="max-h-[70vh] touch-pan-y">
                           {panels?.map(p => (
                             <SelectItem key={p.id} value={String(p.id)}>
                               {p.fabricante} {p.nome} — {p.potencia} W
@@ -2293,7 +2296,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                         <FormLabel>Inversor *</FormLabel>
                         <Select onValueChange={v => field.onChange(Number(v))} value={field.value?.toString()}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecionar inversor..." /></SelectTrigger></FormControl>
-                          <SelectContent>
+                          <SelectContent className="max-h-[70vh] touch-pan-y">
                             {inverters?.map(i => {
                               const acKw = Number(i.potenciaAc) > 500 ?Number(i.potenciaAc) / 1000 : Number(i.potenciaAc);
                               const ok = sizing && acKw >= sizing.potenciaRecomendada * 0.9;
@@ -2336,7 +2339,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
                             <SelectTrigger className="flex-1 h-9">
                               <SelectValue placeholder="Selecionar inversor..." />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-[70vh] touch-pan-y">
                               {inverters?.map(i => {
                                 const acKw = Number(i.potenciaAc) > 500 ?Number(i.potenciaAc) / 1000 : Number(i.potenciaAc);
                                 const ok = sizing && acKw >= sizing.potenciaRecomendada * 0.9;
@@ -3114,7 +3117,7 @@ const [spacingOrientation, setSpacingOrientation] = useState<"horizontal" | "ver
         </div>
       )}
       {step === 11 && (
-        <div className="h-[calc(100vh-190px)] min-h-[620px] overflow-hidden rounded-lg border bg-white shadow-sm sm:h-[calc(100vh-220px)] sm:min-h-[760px]">
+        <div className="min-h-[70vh] overflow-visible rounded-lg border bg-white shadow-sm sm:h-[calc(100vh-220px)] sm:min-h-[760px] sm:overflow-hidden">
           <ReportBuilder projectId={projectId} draftOverride={liveReportDraft} companyOverride={company} />
         </div>
       )}
