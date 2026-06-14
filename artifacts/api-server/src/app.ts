@@ -96,13 +96,25 @@ const frontendDist = frontendDistCandidates.find((candidate) =>
 
 if (frontendDist) {
   logger.info({ frontendDist }, "Serving PV Sizing frontend");
-  app.use(express.static(frontendDist, { index: false }));
+  app.use(
+    express.static(frontendDist, {
+      index: false,
+      maxAge: "1y",
+      immutable: true,
+      setHeaders(res, filePath) {
+        if (!filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+        }
+      },
+    }),
+  );
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.method !== "GET" || req.path.startsWith("/api")) {
       next();
       return;
     }
 
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 } else {
